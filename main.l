@@ -1,0 +1,49 @@
+%{
+#include <stdlib.h>
+#include <stdio.h>
+#include "y.tab.h"
+%}
+
+%option noyywrap
+
+%%
+
+[ \t\n]+                                {};
+[0-9]+                                  {
+//                                          yylval.num = atoi(yytext);
+                                          return tNB;
+                                        }
+[0-9]+"."[0-9]+                         {
+//                                          yylval.num = atoi(yytext); 
+                                          return tNB;
+                                        }
+[0-9]+("."[0-9]+)?("E"|"e")[0-9]+       {
+//                                          yylval.num = atof(yytext);
+                                          return tNB;
+                                        }
+"main"                                  { return tMAIN; }
+"{"                                     { return tAO; }
+"}"                                     { return tAF; }
+"int"                                   { return tINT; }
+"void" 		                        { return tVOID; }
+"const"                                 { return tCONST; }
+"if" 		                        { return tIF; }
+"while" 	                        { return tWHILE; }
+"="	                                { return tEGAL; }
+"-"	                                { return tSOU; }
+"+"	                                { return tADD; }
+"*"	                                { return tMUL; }
+"/"	                                { return tDIV; }
+"("	                                { return tPO; }
+")"	                                { return tPF; }
+"=="                                    { return tEQ; }
+"!="                                    { return tDIF; }
+">"                                     { return tSUP; }
+"<"                                     { return tINF; }
+">="                                    { return tSUE; }
+"<="                                    { return tINE; }
+"&&"                                    { return tAND; }
+"||"                                    { return tOR; }
+"print"		                        { return tPRINT; }
+";"           	                        { return tPV; }
+([a-z]|[A-Z])([a-z]|[A-Z]|[0-9]|_)* 	{ return tID; }
