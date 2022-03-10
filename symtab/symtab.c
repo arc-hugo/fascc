@@ -1,5 +1,5 @@
-#include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include "symtab.h"
 
 symtab * init_stack() {
@@ -28,5 +28,20 @@ int pop(symtab * st, cell ** c) {
    }
    *c = st->begin;
    st->begin = st->begin->next;
+   st->height--;
    return 0;
 }
+
+int get_address(symtab * st, char* str) {
+   cell * temp = st->begin;
+   while (temp != NULL && !strcmp(temp->var.name,str)) {
+      temp = temp->next;
+   }
+   if (temp == NULL) {
+      return -1;
+   } else {
+      return temp->var.add;
+   }
+}
+
+void add_sym();

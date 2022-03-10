@@ -22,8 +22,8 @@ Inst : Decl
      | Print
      | Ctrl ;
 Decl: Type tID tPV /*{ add_sym($1,$2); } /* Déclaration sans affectation */
-    | Type tID tEGAL Valeur tPV /*{ add_sym_val($1,$2,$4); }*/ /* Déclaration avec affectation */
-    | tCONST Type tID tEGAL Valeur tPV /*{ add_const($2,$3,$5); }*/; /* Déclaration de constante */
+    | Type tID tEGAL Valeur tPV /*{ add_sym($1,$2); }*/ /* Déclaration avec affectation */
+    | tCONST Type tID tEGAL Valeur tPV /*{ valeur dans le code }*/; /* Déclaration de constante */
 Aff: tID tEGAL Valeur tPV /*{ att_sym($1,$3); } /* Attribution */
    | tID tADD tEGAL Valeur tPV /*{ att_sym($1,$4); } /* Addition */
    | tID tSOU tEGAL Valeur tPV /*{ att_sym($1,$4); } /* Soustraction */
