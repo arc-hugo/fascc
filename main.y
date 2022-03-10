@@ -24,12 +24,12 @@ Inst : Decl
 Decl: Type tID tPV /*{ add_sym($1,$2); } /* Déclaration sans affectation */
     | Type tID tEGAL Valeur tPV /*{ add_sym($1,$2); }*/ /* Déclaration avec affectation */
     | tCONST Type tID tEGAL Valeur tPV /*{ valeur dans le code }*/; /* Déclaration de constante */
-Aff: tID tEGAL Valeur tPV /*{ att_sym($1,$3); } /* Attribution */
-   | tID tMUL tEGAL Valeur tPV /*{ att_sym($1,$4); } /* Multiplication */
-   | tID tDIV tEGAL Valeur tPV /*{ att_sym($1,$4); }*/ /* Division */
-   | tID tADD tEGAL Valeur tPV /*{ att_sym($1,$4); } /* Addition */
-   | tID tSOU tEGAL Valeur tPV ; /*{ att_sym($1,$4); } /* Soustraction */
-Valeur: tNB // { $$ = $1; } /* Nombre */
+Aff: tID tEGAL Valeur tPV /*{  } /* Attribution */
+   | tID tMUL tEGAL Valeur tPV /*{  } /* Multiplication */
+   | tID tDIV tEGAL Valeur tPV /*{  }*/ /* Division */
+   | tID tADD tEGAL Valeur tPV /*{  } /* Addition */
+   | tID tSOU tEGAL Valeur tPV ; /*{  } /* Soustraction */
+Valeur: tNB // { } /* Nombre */
       | tID //{ get_val($1); } /* Variable */
       | tPO Valeur tPF //{ $$ = $2; } /* Parenthèse */
       | Valeur tADD Valeur //{ $$ = $1 + $3; } /* Addition */

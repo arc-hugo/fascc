@@ -1,15 +1,15 @@
 #ifndef SYMTAB_H__
 #define SYMTAB_H__
 
-typedef enum {
+enum type {
    INT,
    VOID
-}type;
+};
 
 typedef struct {
    char* name;
    unsigned short add;
-   type t;
+   enum type t;
    unsigned short depth;
 } variable;
 

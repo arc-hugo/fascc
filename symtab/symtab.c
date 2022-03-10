@@ -22,11 +22,11 @@ int push(symtab * st, cell * c) {
    return 0;
 }
 
-int pop(symtab * st, cell ** c) {
+int pop(symtab * st, cell * c) {
    if (height(st) == 0) {
       return -1;
    }
-   *c = st->begin;
+   c = st->begin;
    st->begin = st->begin->next;
    st->height--;
    return 0;
@@ -44,4 +44,17 @@ int get_address(symtab * st, char* str) {
    }
 }
 
-void add_sym();
+int add_sym(symtab * st, enum type t, char* name, unsigned short depth) {
+   variable var = {strdup(name), height(st), t, depth};
+   cell * c = malloc(sizeof(cell));
+   c->var = var;
+   return push(st, c);
+}
+
+int remove_depth(symtab * st) {
+   cell * temp = malloc(sizeof(cell));
+   while (pop(st, temp) == 0) {
+
+   }
+   return 0;
+}
