@@ -25,10 +25,10 @@ Decl: Type tID tPV /*{ add_sym($1,$2); } /* Déclaration sans affectation */
     | Type tID tEGAL Valeur tPV /*{ add_sym_val($1,$2,$4); }*/ /* Déclaration avec affectation */
     | tCONST Type tID tEGAL Valeur tPV /*{ add_const($2,$3,$5); }*/; /* Déclaration de constante */
 Aff: tID tEGAL Valeur tPV /*{ att_sym($1,$3); } /* Attribution */
-   | tID tADD tEGAL Valeur tPV /*{ att_sym($1,$4); } /* Addition */
-   | tID tSOU tEGAL Valeur tPV /*{ att_sym($1,$4); } /* Soustraction */
    | tID tMUL tEGAL Valeur tPV /*{ att_sym($1,$4); } /* Multiplication */
-   | tID tDIV tEGAL Valeur tPV /*{ att_sym($1,$4); }*/; /* Division */
+   | tID tDIV tEGAL Valeur tPV /*{ att_sym($1,$4); }*/ /* Division */
+   | tID tADD tEGAL Valeur tPV /*{ att_sym($1,$4); } /* Addition */
+   | tID tSOU tEGAL Valeur tPV ; /*{ att_sym($1,$4); } /* Soustraction */
 Valeur: tNB // { $$ = $1; } /* Nombre */
       | tID //{ get_val($1); } /* Variable */
       | tPO Valeur tPF //{ $$ = $2; } /* Parenthèse */
