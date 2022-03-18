@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "symtab.h"
 #include "y.tab.h"
 %}
 
@@ -37,7 +38,7 @@
 "/"	                                { return tDIV; }
 "("	                                { return tPO; }
 ")"	                                { return tPF; }
-"=="                                    { return tEQ; }
+"=="                                    { return tDEG; }
 "!="                                    { return tDIF; }
 ">"                                     { return tSUP; }
 "<"                                     { return tINF; }

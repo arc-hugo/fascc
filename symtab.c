@@ -2,7 +2,7 @@
 #include <string.h>
 #include "symtab.h"
 
-symtab * init_stack() {
+symtab * init_st() {
    symtab * st = malloc(sizeof(symtab));
    st->height = 0;
    return st;
@@ -45,10 +45,13 @@ int get_address(symtab * st, char* name) {
 }
 
 int add_sym(symtab * st, enum type t, char* name, unsigned short depth) {
-   variable var = {strdup(name), height(st), t, depth};
-   cell * c = malloc(sizeof(cell));
-   c->var = var;
-   return push(st, c);
+   if (get_address(st, name) == -1) {
+      variable var = {strdup(name), height(st), t, depth};
+      cell * c = malloc(sizeof(cell));
+      c->var = var;
+      return push(st, c);
+   }
+   return -1;
 }
 
 int remove_depth(symtab * st, unsigned short depth) {

@@ -24,11 +24,11 @@ typedef struct {
    cell* begin;
 } symtab;
 
-symtab * init_stack();
-
-int get_address(symtab * st, char* name);
+symtab * init_st();
 
 int add_sym(symtab * st, enum type t, char* name, unsigned short depth);
+
+int get_address(symtab * st, char* name);
 
 int remove_depth(symtab * st, unsigned short depth);
 
