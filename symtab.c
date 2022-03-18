@@ -58,7 +58,8 @@ int remove_depth(symtab * st, unsigned short depth) {
    cell * temp = malloc(sizeof(cell));
    unsigned short ret = pop(st, temp);
    while (ret == 0 && temp->var.depth >= depth) {
-      pop(st, temp);
+      free(temp);
+      ret = pop(st, temp);
    }
    if (ret == 0) {
       push(st, temp);
