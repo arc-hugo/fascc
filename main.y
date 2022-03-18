@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "symtab.h"
+#include "asmtab.h"
 
 unsigned short depth = 0;
 symtab * st;
+asmtab * at;
 %}
 %union {int num; char* string; enum type type;}
 %token tMAIN tAO tAF tINT tVOID tIF tWHILE tCONST tEGAL tSOU tADD tMUL tDIV tPO tPF tPV tFL tPRINT tID tNB tDEG tDIF tSUP tINF tSUE tINE tAND tOR
@@ -30,7 +32,7 @@ Inst : Decl
 Decl: Type tID tPV { add_sym(st,$1,$2,depth); } /* Déclaration sans affectation */
     | Type tID tEGAL Valeur tPV { add_sym(st,$1,$2,depth); /* ASM */ } /* Déclaration avec affectation */
     | tCONST Type tID tEGAL Valeur tPV /*{ valeur dans le code }*/; /* Déclaration de constante */
-Aff: tID tEGAL Valeur tPV /*{  } /* Attribution */
+Aff: tID tEGAL Valeur tPV { add_asm(at,AFC,get_address(st,$1),$3,0); } /* Attribution */
    | tID tMUL tEGAL Valeur tPV /*{  } /* Multiplication */
    | tID tDIV tEGAL Valeur tPV /*{  }*/ /* Division */
    | tID tADD tEGAL Valeur tPV /*{  } /* Addition */
@@ -61,6 +63,7 @@ Cond  : Valeur
 void yyerror(char *s) { fprintf(stderr, "%s\n", s); exit(1); }
 int main(void) {
    st = init_st();
+   at = init_at();
    yyparse();
    printf("YES\n");
    return 0;
