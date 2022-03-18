@@ -15,6 +15,9 @@ symtab * st;
 %start Main
 %%
 Main : tMAIN tPO tPF Body ; /* Main */
+Func : Type tID tPO Args tPF Body {printf("fin function");};  /* Function */ 
+Arg : Type tID ; 
+Args : Arg tVIR Args ; 
 Type : tINT { $$ = INT; }
      | tVOID { $$ = VOID; };
 Body : tAO { depth++; } Insts tAF { remove_depth(st,depth); depth--; }; /* Corps de fonction/structure de contrôle */

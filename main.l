@@ -23,7 +23,7 @@
 //                                          yylval.num = atof(yytext);
                                           return tNB;
                                         }
-"main"                                  { return tMAIN; }
+"main"                                 { return tMAIN; }
 "{"                                     { return tAO; }
 "}"                                     { return tAF; }
 "int"                                   { return tINT; }
@@ -48,6 +48,7 @@
 "||"                                    { return tOR; }
 "print"		                        { return tPRINT; }
 ";"           	                        { return tPV; }
+","                                  { return tVIR; }
 ([a-z]|[A-Z])([a-z]|[A-Z]|[0-9]|_)* 	{ 
                                           yylval.string = strdup(yytext); 
                                           return tID; 
