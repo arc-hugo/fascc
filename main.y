@@ -3,7 +3,7 @@
 #include <stdio.h>
 %}
 //%union {int num; char* string;}
-%token tMAIN tAO tAF tINT tVOID tIF tWHILE tCONST tEGAL tSOU tADD tMUL tDIV tPO tPF tPV tFL tPRINT tID tNB tEQ tDIF tSUP tINF tSUE tINE tAND tOR
+%token tMAIN tAO tAF tINT tVOID tIF tWHILE tCONST tEGAL tSOU tADD tMUL tDIV tPO tPF tPV tFL tPRINT tID tNB tEQ tDIF tSUP tINF tSUE tINE tAND tOR tVIR
 /*
 %token <num> tNB tEQ tDIF tSUP tINF tSUE tINE
 %token <string> tID
@@ -12,8 +12,11 @@
 %start Main
 %%
 Main : tMAIN tPO tPF Body ; /* Main */
+Func : Type tID tPO Args tPF Body {printf("fin function");};  /* Function */ 
 Type : tINT
      | tVOID ;
+Arg : Type tID ; 
+Args : Arg tVIR Args ; 
 Body : tAO Insts tAF; /* Corps de fonction/structure de contrôle */
 Insts: Inst Insts
      | ;
