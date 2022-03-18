@@ -35,6 +35,8 @@ typedef struct {
    asmcell* end;
 } asmtab;
 
+asmtab * init_at();
 
+int add_asm(asmtab * at, enum op op, unsigned short op0, unsigned short op1, unsigned short op2);
 
 #endif
