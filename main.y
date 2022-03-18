@@ -33,17 +33,16 @@ Decl: Type tID tPV { add_sym(st,$1,$2,depth); } /* Déclaration sans affectation
     | Type tID tEGAL Valeur tPV { add_sym(st,$1,$2,depth); /* ASM */ } /* Déclaration avec affectation */
     | tCONST Type tID tEGAL Valeur tPV /*{ valeur dans le code }*/; /* Déclaration de constante */
 Aff: tID tEGAL Valeur tPV { add_asm(at,AFC,get_address(st,$1),$3,0); } /* Attribution */
-   | tID tMUL tEGAL Valeur tPV /*{  } /* Multiplication */
-   | tID tDIV tEGAL Valeur tPV /*{  }*/ /* Division */
-   | tID tADD tEGAL Valeur tPV /*{  } /* Addition */
-   | tID tSOU tEGAL Valeur tPV ; /*{  } /* Soustraction */
+   | tID tMUL tEGAL Valeur tPV { add_asm(at,MUL,get_address(st,$1),get_address(st,$1),$4);  } /* Multiplication */
+   | tID tDIV tEGAL Valeur tPV { add_asm(at,DIV,get_address(st,$1),get_address(st,$1),$4); }*/ /* Division */
+   | tID tADD tEGAL Valeur tPV { add_asm(at,ADD,get_address(st,$1),get_address(st,$1),$4); } /* Addition */
+   | tID tSOU tEGAL Valeur tPV ; { add_asm(at,SOU,get_address(st,$1),get_address(st,$1),$4); } /* Soustraction */
 Valeur: tNB { add_tmp(), add_asm(at,AFC,) } /* Nombre */
       | tID { $$ = get_address(st,$1); } /* Variable */
-      | tPO Valeur tPF //{ $$ = $2; } /* Parenthèse */
-      | Valeur tMUL Valeur //{ $$ = $1 * $3; }/* Multiplication */
-      | Valeur tDIV Valeur //{ $$ = $1 / $3; }; /* Division */
-      | Valeur tADD Valeur //{ $$ = $1 + $3; } /* Addition */
-      | Valeur tSOU Valeur //{ $$ = $1 - $3; }/* Soustraction */
+      | Valeur tMUL Valeur { add_asm(at,MUL,$1,$1,$3); $$=$1;  }//{ $$ = $1 * $3; }/* Multiplication */
+      | Valeur tDIV Valeur { add_asm(at,DIV,$1,$1,$3); $$=$1;  }//{ $$ = $1 / $3; }; /* Division */
+      | Valeur tADD Valeur { add_asm(at,ADD,$1,$1,$3); $$=$1;  } /* Addition */
+      | Valeur tSOU Valeur { add_asm(at,SOU,$1,$1,$3); $$=$1;  }//{ $$ = $1 - $3; }/* Soustraction */
 Print : tPRINT tPO Valeur tPF tPV; //{ printf("%d\n",$3); };
 Ctrl  : tIF tPO Conds tPF Body
       | tWHILE tPO Conds tPF Body;
