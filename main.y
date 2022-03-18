@@ -37,13 +37,13 @@ Aff: tID tEGAL Valeur tPV { add_asm(at,AFC,get_address(st,$1),$3,0); } /* Attrib
    | tID tDIV tEGAL Valeur tPV /*{  }*/ /* Division */
    | tID tADD tEGAL Valeur tPV /*{  } /* Addition */
    | tID tSOU tEGAL Valeur tPV ; /*{  } /* Soustraction */
-Valeur: tNB {  } /* Nombre */
-      | tID { get_address(st,$1) } /* Variable */
+Valeur: tNB { add_tmp(), add_asm(at,AFC,) } /* Nombre */
+      | tID { $$ = get_address(st,$1); } /* Variable */
       | tPO Valeur tPF //{ $$ = $2; } /* Parenthèse */
-      | Valeur tADD Valeur //{ $$ = $1 + $3; } /* Addition */
-      | Valeur tSOU Valeur //{ $$ = $1 - $3; }/* Soustraction */
       | Valeur tMUL Valeur //{ $$ = $1 * $3; }/* Multiplication */
       | Valeur tDIV Valeur //{ $$ = $1 / $3; }; /* Division */
+      | Valeur tADD Valeur //{ $$ = $1 + $3; } /* Addition */
+      | Valeur tSOU Valeur //{ $$ = $1 - $3; }/* Soustraction */
 Print : tPRINT tPO Valeur tPF tPV; //{ printf("%d\n",$3); };
 Ctrl  : tIF tPO Conds tPF Body
       | tWHILE tPO Conds tPF Body;
