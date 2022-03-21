@@ -5,7 +5,7 @@ BIN=main
 CC=gcc
 CFLAGS=-Wall -g
 
-OBJ=symtab.o lex.yy.o y.tab.o
+OBJ=symtab.o y.tab.o lex.yy.o
 
 all: $(BIN)
 
@@ -22,7 +22,7 @@ $(BIN): $(OBJ)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -o $@
 
 clean:
-	rm $(OBJ) y.tab.c y.tab.h lex.yy.c
+	rm $(OBJ) y.tab.c lex.yy.c
 
 test: all
 	echo "main(){}" | ./$(BIN)
