@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "symtab.h"
 
@@ -12,14 +13,12 @@ int height(symtab * st) {
    return st->height;
 }
 
-int push(symtab * st, cell * c) {
-   if (c != NULL) {
-      cell * temp = st->begin;
-      c->next = temp;
-      st->begin = c;
-      return st->height++;
-   }
-   return -1;
+int push(symtab * st, variable var) {
+   cell * temp = malloc(sizeof(cell));
+   temp->var = var;
+   temp->next = st->begin;
+   st->begin = temp;
+   return st->height++;
 }
 
 int pop(symtab * st, cell * c) {
@@ -37,7 +36,7 @@ int pop(symtab * st, cell * c) {
 
 int get_address(symtab * st, char* name) {
    cell * temp = st->begin;
-   while (temp != NULL && !strcmp(temp->var.name,name)) {
+   while (temp != NULL && strcmp(temp->var.name,name) != 0) {
       temp = temp->next;
    }
    if (temp == NULL) {
@@ -50,9 +49,7 @@ int get_address(symtab * st, char* name) {
 int add_sym(symtab * st, enum type t, char* name, unsigned short depth) {
    if (get_address(st, name) == -1) {
       variable var = {strdup(name), height(st), t, depth};
-      cell * c = malloc(sizeof(cell));
-      c->var = var;
-      return push(st, c);
+      return push(st, var);
    }
    return -1;
 }
@@ -61,7 +58,7 @@ unsigned short get_tmp(symtab * st, unsigned short offset) {
    return height(st)+offset;
 }
 
-int is_tmp(symtab * st, unsigned short add) {
+unsigned short is_tmp(symtab * st, unsigned short add) {
    return height(st) <= add;
 }
 
@@ -72,7 +69,8 @@ int remove_depth(symtab * st, unsigned short depth) {
       ret = pop(st, temp);
    }
    if (ret == 0) {
-      push(st, temp);
+      push(st, temp->var);
    }
+   free(temp);
    return 0;
 }
