@@ -51,5 +51,9 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# Lex/Yacc output
 main
 y.output
+lex.yy.c
+y.tab.c
+y.tab.h
