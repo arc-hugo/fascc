@@ -26,8 +26,11 @@ int pop(symtab * st, cell * c) {
    if (height(st) == 0) {
       return -1;
    }
-   c = st->begin;
-   st->begin = st->begin->next;
+   c->next = st->begin->next;
+   c->var = st->begin->var;
+   cell * tmp = st->begin->next;
+   free(st->begin);
+   st->begin = tmp;
    st->height--;
    return 0;
 }
@@ -66,7 +69,6 @@ int remove_depth(symtab * st, unsigned short depth) {
    cell * temp = malloc(sizeof(cell));
    unsigned short ret = pop(st, temp);
    while (ret == 0 && temp->var.depth >= depth) {
-      free(temp);
       ret = pop(st, temp);
    }
    if (ret == 0) {
