@@ -17,9 +17,9 @@ int push(symtab * st, cell * c) {
       cell * temp = st->begin;
       c->next = temp;
       st->begin = c;
-      st->height++;
+      return st->height++;
    }
-   return 0;
+   return -1;
 }
 
 int pop(symtab * st, cell * c) {
@@ -52,6 +52,14 @@ int add_sym(symtab * st, enum type t, char* name, unsigned short depth) {
       return push(st, c);
    }
    return -1;
+}
+
+unsigned short get_tmp(symtab * st, unsigned short offset) {
+   return height(st)+offset;
+}
+
+int is_tmp(symtab * st, unsigned short add) {
+   return height(st) <= add;
 }
 
 int remove_depth(symtab * st, unsigned short depth) {
