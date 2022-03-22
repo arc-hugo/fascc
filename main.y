@@ -61,11 +61,11 @@ Inst : Decl
 Decl: Type tID tPV { add_sym(st,$1,$2,depth); } /* Déclaration sans affectation */
     | Type tID tEGAL Valeur tPV { add_sym(st,$1,$2,depth); offset=0; } /* Déclaration avec affectation */
     | tCONST Type tID tEGAL Valeur tPV /*{ valeur dans le code }*/; /* Déclaration de constante */
-Aff: tID tEGAL Valeur tPV { add_asm(at,COP,get_address(st,$1),$3,0); } /* Attribution */
-   | tID tMUL tEGAL Valeur tPV { add_tmp = get_address(st,$1); add_asm(at,MUL,add_tmp,add_tmp,$4); } /* Multiplication */
-   | tID tDIV tEGAL Valeur tPV { add_tmp = get_address(st,$1); add_asm(at,DIV,add_tmp,add_tmp,$4); } /* Division */
-   | tID tADD tEGAL Valeur tPV { add_tmp = get_address(st,$1); add_asm(at,ADD,add_tmp,add_tmp,$4); } /* Addition */
-   | tID tSOU tEGAL Valeur tPV { add_tmp = get_address(st,$1); add_asm(at,SOU,add_tmp,add_tmp,$4); } /* Soustraction */;
+Aff: tID tEGAL Valeur tPV { add_asm(at,COP,get_address(st,$1),$3,0); reduce_cop(at); offset=0; } /* Attribution */
+   | tID tMUL tEGAL Valeur tPV { add_tmp = get_address(st,$1); add_asm(at,MUL,add_tmp,add_tmp,$4); offset=0; } /* Multiplication */
+   | tID tDIV tEGAL Valeur tPV { add_tmp = get_address(st,$1); add_asm(at,DIV,add_tmp,add_tmp,$4); offset=0; } /* Division */
+   | tID tADD tEGAL Valeur tPV { add_tmp = get_address(st,$1); add_asm(at,ADD,add_tmp,add_tmp,$4); offset=0; } /* Addition */
+   | tID tSOU tEGAL Valeur tPV { add_tmp = get_address(st,$1); add_asm(at,SOU,add_tmp,add_tmp,$4); offset=0; } /* Soustraction */;
 Valeur: tNB { add_tmp = get_tmp(st,offset++); add_asm(at,AFC,add_tmp,$1,0); $$ = add_tmp;  } /* Nombre */
       | tID { $$ = get_address(st,$1); } /* Variable */
       | tPO Valeur tPF { $$ = $2; } /* Parenthèses */

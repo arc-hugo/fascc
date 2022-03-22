@@ -45,6 +45,7 @@ asmtab * init_at();
 
 unsigned int get_last_line(asmtab * at);
 int add_asm(asmtab * at, enum op op, unsigned short op0, unsigned short op1, unsigned short op2);
+int reduce_cop(asmtab * at);
 int jump_nop(asmtab * at, unsigned int ln);
 int jump_cnd(asmtab * at);
 void parse(asmtab * at);

@@ -2,6 +2,8 @@ GRM=main.y
 LEX=main.l
 BIN=main
 
+TESTDIR=test/
+
 CC=gcc
 CFLAGS=-Wall -g
 
@@ -16,7 +18,7 @@ y.tab.c: $(GRM)
 	yacc -d -v -t $<
 
 lex.yy.c: $(LEX)
-	flex --debug $<
+	flex $<
 
 $(BIN): $(OBJ)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -o $@
@@ -25,7 +27,7 @@ clean:
 	rm $(OBJ) y.tab.c lex.yy.c
 
 test: all
-#	echo "main(){}" | ./$(BIN)
-#	echo "main({}" | ./$(BIN) || echo ERROR
-#	echo "main(){int a=0;a+=10;print(a);}" | ./$(BIN)
-	cat test/testConds/whileDouble.c | ./$(BIN); cat test/testConds/whileDouble.c
+	for f in $(shell find $(TESTDIR) -name '*.c'); do\
+		echo "-------------------------------$$f--------------------------------";\
+		cat $$f | ./$(BIN); cat $$f; echo; \
+	done

@@ -65,6 +65,20 @@ int add_asm(asmtab * at, enum op op, unsigned short op0, unsigned short op1, uns
    return add(at, ins);
 }
 
+int reduce_cop(asmtab * at) {
+   if (at->end->ins.op == COP && 
+      at->end->previous->ins.op == AFC &&
+      at->end->previous->ins.op0 == at->end->ins.op1) {
+      at->end->previous->ins.op0 = at->end->ins.op0;
+      asmcell * tmp = at->end;
+      at->end = at->end->previous;
+      free(tmp);
+      at->end->next = NULL;
+      at->size--;
+   }
+   return 0;
+}
+
 int jump_nop(asmtab *at, unsigned int ln) {
    asmcell** add = malloc(sizeof(asmcell*));
    int ret = remove_op(at, NOP, add);
@@ -91,7 +105,6 @@ int jump_cnd(asmtab *at) {
    int ret = remove_op(at, CND, add);
    if (ret >= 0 && (*add)->next != NULL) {
       asmcell* tmp = *add;
-      printf("%d\n",ret);
       at->end->ins.op0 = ret;
       while (tmp != at->end) {
          tmp = tmp->next;
