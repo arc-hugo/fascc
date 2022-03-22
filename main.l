@@ -49,6 +49,8 @@
 "print"		                        { return tPRINT; }
 ";"           	                        { return tPV; }
 ","                                  { return tVIR; }
+"/*"([^*]|\*+[^*/])*\*+"/"              {}
+"//".*|"/*"(.*[\n].*)*"*/"              {}
 ([a-z]|[A-Z])([a-z]|[A-Z]|[0-9]|_)* 	{ 
                                           yylval.string = strdup(yytext); 
                                           return tID; 
