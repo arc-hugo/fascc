@@ -12,6 +12,19 @@ unsigned int get_last_line(asmtab *at) {
    return at->size;
 }
 
+int get_line(asmtab *at, asmcell* c) {
+   asmcell* tmp = at->begin;
+   int count = 0;
+   while (tmp != NULL && tmp != c) {
+      count++;
+      tmp = tmp->next;
+   }
+   if (tmp == NULL) {
+      return -1;
+   }
+   return count;
+}
+
 int add(asmtab * at, inst ins) {
    if (get_last_line(at) == 0) {
       at->begin = malloc(sizeof(asmcell));
@@ -30,20 +43,19 @@ int add(asmtab * at, inst ins) {
    return 0;
 }
 
-int remove_nop(asmtab * at, asmcell * c) {
+int remove_op(asmtab * at, enum op op, asmcell ** c) {
    asmcell * tmp = at->end;
-   while (tmp != NULL && tmp->ins.op != NOP) {
+   int line = 0;
+   while (tmp != NULL && tmp->ins.op != op) {
       tmp = tmp->previous;
+      line++;
    }
    if (tmp != NULL) {
       tmp->previous->next = tmp->next;
       tmp->next->previous = tmp->previous;
-      c->next = tmp->next;
-      c->previous = tmp->previous;
-      c->ins = tmp->ins;
-      free(tmp);
+      *c = tmp;
       at->size--;
-      return 0;
+      return (at->size+1)-line;
    }
    return -1;
 }
@@ -54,11 +66,44 @@ int add_asm(asmtab * at, enum op op, unsigned short op0, unsigned short op1, uns
 }
 
 int jump_nop(asmtab *at, unsigned int ln) {
-   asmcell cell;;
-   int ret = remove_nop(at, &cell);
-   if (ret == 0 && cell.previous != NULL) {
-      cell.previous->ins.op1 = ln-1;
+   asmcell** add = malloc(sizeof(asmcell*));
+   int ret = remove_op(at, NOP, add);
+   if (ret >= 0 && (*add)->previous != NULL) {
+      asmcell* tmp = *add;
+      tmp->previous->ins.op1 = ln-1;
+      while (ret >= 0 && tmp != NULL && tmp != at->end) {
+         tmp = tmp->next;
+         if (tmp->ins.op == JMF) {
+            tmp->ins.op1--;
+         }
+         if (tmp->ins.op == JMP) {
+            tmp->ins.op0--;
+         }
+      }
+      free(*add);
    }
+   free(add);
+   return ret;
+}
+
+int jump_cnd(asmtab *at) {
+   asmcell** add = malloc(sizeof(asmcell*));
+   int ret = remove_op(at, CND, add);
+   if (ret >= 0 && (*add)->next != NULL) {
+      asmcell* tmp = *add;
+      printf("%d\n",ret);
+      at->end->ins.op0 = ret;
+      while (tmp != at->end) {
+         tmp = tmp->next;
+         if (tmp->ins.op == JMP) {
+            tmp->ins.op0--;
+         } else if (tmp->ins.op == JMF) {
+            tmp->ins.op1--;
+         }
+      }
+      free(*add);
+   }
+   free(add);
    return ret;
 }
 
