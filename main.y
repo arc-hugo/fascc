@@ -36,6 +36,9 @@ unsigned short tmp_add(unsigned short left, unsigned short right) {
 %type <num> Valeur Cond Conds
 %type <type> Type
 %type <op> Sym
+%right tEGAL
+%left tADD tSOU
+%left tMUL tDIV
 %start Prg
 %%
 Prg  : Func Prg
