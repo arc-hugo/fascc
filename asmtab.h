@@ -14,6 +14,9 @@ enum op {
    SUP,
    EQU,
    PRI,
+   AND,
+   OR,
+   NOT,
    NOP
 };
 

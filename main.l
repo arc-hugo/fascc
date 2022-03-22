@@ -20,7 +20,7 @@
                                           return tNB;
                                         }
 [0-9]+("."[0-9]+)?("E"|"e")[0-9]+       {
-                                          yylval.num = atof(yytext);
+                                          yylval.num = strtold(yytext,NULL);
                                           return tNB;
                                         }
 "main"                                 { return tMAIN; }

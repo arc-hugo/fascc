@@ -51,7 +51,7 @@ int add_asm(asmtab * at, enum op op, unsigned short op0, unsigned short op1, uns
 int jump_if(asmtab *at, unsigned int ln) {
    asmcell cell;
    int ret = remove_nop(at, &cell);
-   if (ret == 0) {
+   if (ret == 0 && cell.previous != NULL) {
       cell.previous->ins.op1 = ln;
    }
    return ret;

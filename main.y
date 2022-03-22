@@ -5,7 +5,7 @@
 #include "asmtab.h"
 
 unsigned short depth = 0;
-unsigned short add_tmp = 0;
+int add_tmp = 0;
 unsigned short offset = 0;
 symtab * st;
 asmtab * at;
@@ -25,17 +25,19 @@ unsigned short tmp_add(unsigned short left, unsigned short right) {
 }
 
 %}
-%union {int num; char* string; enum type type;}
+%union {int num; char* string; enum type type; enum op op}
 %token tMAIN tAO tAF tINT tVOID tIF tWHILE tCONST tEGAL tSOU tADD tMUL tDIV tPO tPF tPV tFL tPRINT tDEG tDIF tSUP tINF tSUE tINE tAND tOR tVIR
 %token <num> tNB
 %token <string> tID
 %type <num> Valeur Cond Conds
 %type <type> Type
+%type <op> Sym
 %start Prg
 %%
 Prg  : Func Prg
      | Main;
-Main : tMAIN tPO tPF Body ; /* Main */
+Main : tMAIN tPO tPF Body 
+     | tINT tMAIN tPO tPF Body ; /* Main */
 Func : Type tID tPO Args tPF Body { printf("fin function"); };  /* Function */
 Arg  : Type tID ;
 Args : Arg tVIR Args 
@@ -65,20 +67,20 @@ Valeur: tNB { add_tmp = get_tmp(st,offset++); add_asm(at,AFC,add_tmp,$1,0); $$ =
       | Valeur tADD Valeur { add_tmp = tmp_add($1,$3); add_asm(at,ADD,add_tmp,$1,$3); $$ = add_tmp; } /* Addition */
       | Valeur tSOU Valeur { add_tmp = tmp_add($1,$3); add_asm(at,SOU,add_tmp,$1,$3); $$ = add_tmp; } /* Soustraction */
 Print : tPRINT tPO Valeur tPF tPV { add_asm(at,PRI,$3,0,0); offset=0; };
-Ctrl  : tIF tPO Conds tPF { add_asm(at,JMF,$3,0,0); add_asm(at,NOP,0,0,0); } Body { jump_if(at,get_last_line(at)); }
-      | tWHILE {  } tPO Conds tPF Body { };
-Conds : Conds Sym Conds
+Ctrl  : tIF tPO Conds tPF { add_asm(at,NOT,$3,$3,0); add_asm(at,JMF,$3,0,0); add_asm(at,NOP,0,0,0); offset=0;} Body { jump_if(at,get_last_line(at)); }
+      | tWHILE tPO Conds tPF { add_asm(at,JMF,$3,0,0); add_asm(at,NOP,0,0,0); } Body { add_asm(at,JMP,0,0,0); jump_while(at,get_last_line(at)); };
+Conds : Conds Sym Conds { add_asm(at,$2,$1,$1,$2); $$ = $1 }
       | tPO Conds tPF { $$ = $2; }
-      | Cond ;
-Sym   : tAND
-      | tOR ;
-Cond  : Valeur
-      | Valeur tDEG Valeur
-      | Valeur tDIF Valeur
-      | Valeur tSUP Valeur
-      | Valeur tSUE Valeur
-      | Valeur tINF Valeur
-      | Valeur tINE Valeur ;
+      | Cond { $$ = $1 };
+Sym   : tAND { $$ = AND; }
+      | tOR { $$ = OR; };
+Cond  : Valeur { $$ =  $1; }
+      | Valeur tDEG Valeur { add_tmp = tmp_add($1,$3); add_asm(at,EQU,add_tmp,$1,$3); $$ = add_tmp; }
+      | Valeur tDIF Valeur { add_tmp = tmp_add($1,$3); add_asm(at,EQU,add_tmp,$1,$3); add_asm(at,NOT,add_tmp,add_tmp,0); $$ = add_tmp; }
+      | Valeur tSUP Valeur { add_tmp = tmp_add($1,$3); add_asm(at,SUP,add_tmp,$1,$3); $$ = add_tmp; }
+      | Valeur tSUE Valeur { add_tmp = tmp_add($1,$3); add_asm(at,INF,add_tmp,$1,$3); add_asm(at,NOT,add_tmp,add_tmp,0); $$ = add_tmp; }
+      | Valeur tINF Valeur { add_tmp = tmp_add($1,$3); add_asm(at,INF,add_tmp,$1,$3); $$ = add_tmp; }
+      | Valeur tINE Valeur { add_tmp = tmp_add($1,$3); add_asm(at,SUP,add_tmp,$1,$3); add_asm(at,NOT,add_tmp,add_tmp,0); $$ = add_tmp; };
 %%
 void yyerror(char *s) { fprintf(stderr, "%s\n", s); exit(1); }
 int main(void) {
