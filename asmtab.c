@@ -52,7 +52,7 @@ int jump_nop(asmtab *at, unsigned int ln) {
    asmcell cell;
    int ret = remove_nop(at, &cell);
    if (ret == 0 && cell.previous != NULL) {
-      cell.previous->ins.op1 = ln;
+      cell.previous->ins.op1 = ln-1;
    }
    return ret;
 }
@@ -98,6 +98,15 @@ void parse(asmtab * at) {
             break;
          case PRI:
             printf("PRI @%d\n",tmp->ins.op0);
+            break;
+         case AND:
+            printf("AND @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
+            break;
+         case OR:
+            printf("OR @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
+            break;
+         case NOT:
+            printf("NOT @%d @%d\n",tmp->ins.op0,tmp->ins.op1);
             break;
          default:
             break;
