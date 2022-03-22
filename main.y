@@ -10,6 +10,7 @@ void yyerror(const char *s);
 unsigned short depth = 0;
 int add_tmp = 0;
 unsigned short offset = 0;
+unsigned short ln = 0;
 symtab * st;
 asmtab * at;
 
@@ -70,8 +71,8 @@ Valeur: tNB { add_tmp = get_tmp(st,offset++); add_asm(at,AFC,add_tmp,$1,0); $$ =
       | Valeur tADD Valeur { add_tmp = tmp_add($1,$3); add_asm(at,ADD,add_tmp,$1,$3); $$ = add_tmp; } /* Addition */
       | Valeur tSOU Valeur { add_tmp = tmp_add($1,$3); add_asm(at,SOU,add_tmp,$1,$3); $$ = add_tmp; } /* Soustraction */
 Print : tPRINT tPO Valeur tPF tPV { add_asm(at,PRI,$3,0,0); offset=0; };
-Ctrl  : tIF tPO Conds tPF { add_asm(at,NOT,$3,$3,0); add_asm(at,JMF,$3,0,0); add_asm(at,NOP,0,0,0); offset=0;} Body { jump_if(at,get_last_line(at)); }
-      | tWHILE tPO Conds tPF { add_asm(at,JMF,$3,0,0); add_asm(at,NOP,0,0,0); } Body { add_asm(at,JMP,0,0,0); jump_while(at,get_last_line(at)); };
+Ctrl  : tIF tPO Conds tPF { add_asm(at,NOT,$3,$3,0); add_asm(at,JMF,$3,0,0); add_asm(at,NOP,0,0,0); offset=0;} Body { jump_nop(at,get_last_line(at)); }
+      | tWHILE tPO { ln = get_last_line(at); } Conds tPF { add_asm(at,JMF,$4,0,0); add_asm(at,NOP,0,0,0); } Body { add_asm(at,JMP,ln,0,0); jump_nop(at,get_last_line(at)); };
 Conds : Conds Sym Conds { add_asm(at,$2,$1,$1,$2); $$ = $1 }
       | tPO Conds tPF { $$ = $2; }
       | Cond { $$ = $1 };
