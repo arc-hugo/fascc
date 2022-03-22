@@ -1,4 +1,7 @@
 %{
+int yylex();
+void yyerror(const char *s);
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "symtab.h"
@@ -80,7 +83,7 @@ Cond  : Valeur
       | Valeur tINF Valeur
       | Valeur tINE Valeur ;
 %%
-void yyerror(char *s) { fprintf(stderr, "%s\n", s); exit(1); }
+void yyerror(const char *s) { fprintf(stderr, "%s\n", s); exit(1); }
 int main(void) {
    st = init_st();
    at = init_at();
