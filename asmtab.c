@@ -17,10 +17,13 @@ int add(asmtab * at, inst ins) {
       at->begin = malloc(sizeof(asmcell));
       at->end = at->begin;
       at->begin->ins = ins;
+      at->begin->previous = NULL;
+      at->begin->next = NULL;
    } else {
       at->end->next = malloc(sizeof(asmcell));
       at->end->next->previous = at->end;
       at->end = at->end->next;
+      at->end->next = NULL;
       at->end->ins = ins;
    }
    at->size++;
@@ -34,10 +37,12 @@ int remove_nop(asmtab * at, asmcell * c) {
    }
    if (tmp != NULL) {
       tmp->previous->next = tmp->next;
+      tmp->next->previous = tmp->previous;
       c->next = tmp->next;
       c->previous = tmp->previous;
       c->ins = tmp->ins;
       free(tmp);
+      at->size--;
       return 0;
    }
    return -1;
@@ -49,7 +54,7 @@ int add_asm(asmtab * at, enum op op, unsigned short op0, unsigned short op1, uns
 }
 
 int jump_nop(asmtab *at, unsigned int ln) {
-   asmcell cell;
+   asmcell cell;;
    int ret = remove_nop(at, &cell);
    if (ret == 0 && cell.previous != NULL) {
       cell.previous->ins.op1 = ln-1;
