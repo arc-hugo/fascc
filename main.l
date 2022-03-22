@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "symtab.h"
+#include "asmtab.h"
 #include "y.tab.h"
 %}
 

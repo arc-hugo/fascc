@@ -27,13 +27,9 @@ typedef struct {
 symtab * init_st();
 
 int add_sym(symtab * st, enum type t, char* name, unsigned short depth);
-
 int get_address(symtab * st, char* name);
-
 int remove_depth(symtab * st, unsigned short depth);
-
 unsigned short is_tmp(symtab * st, unsigned short add);
-
 unsigned short get_tmp(symtab * st, unsigned short offset);
 
 #endif

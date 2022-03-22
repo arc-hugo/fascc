@@ -1,16 +1,16 @@
 %{
+#include <stdlib.h>
+#include <stdio.h>
+#include "asmtab.h"
+#include "symtab.h"
+
 int yylex();
 void yyerror(const char *s);
 
-#include <stdlib.h>
-#include <stdio.h>
-#include "symtab.h"
-#include "asmtab.h"
-
 unsigned short depth = 0;
-int add_tmp = 0;
 unsigned short offset = 0;
 unsigned short ln = 0;
+int add_tmp = 0;
 symtab * st;
 asmtab * at;
 
@@ -29,7 +29,7 @@ unsigned short tmp_add(unsigned short left, unsigned short right) {
 }
 
 %}
-%union {int num; char* string; enum type type; enum op op}
+%union {int num; char* string; enum type type; enum op op;}
 %token tMAIN tAO tAF tINT tVOID tIF tWHILE tCONST tEGAL tSOU tADD tMUL tDIV tPO tPF tPV tFL tPRINT tDEG tDIF tSUP tINF tSUE tINE tAND tOR tVIR
 %token <num> tNB
 %token <string> tID
@@ -72,13 +72,13 @@ Valeur: tNB { add_tmp = get_tmp(st,offset++); add_asm(at,AFC,add_tmp,$1,0); $$ =
       | Valeur tSOU Valeur { add_tmp = tmp_add($1,$3); add_asm(at,SOU,add_tmp,$1,$3); $$ = add_tmp; } /* Soustraction */
 Print : tPRINT tPO Valeur tPF tPV { add_asm(at,PRI,$3,0,0); offset=0; };
 Ctrl  : tIF tPO Conds tPF { add_asm(at,NOT,$3,$3,0); add_asm(at,JMF,$3,0,0); add_asm(at,NOP,0,0,0); offset=0;} Body { jump_nop(at,get_last_line(at)); }
-      | tWHILE tPO { ln = get_last_line(at); } Conds tPF { add_asm(at,JMF,$4,0,0); add_asm(at,NOP,0,0,0); } Body { add_asm(at,JMP,ln,0,0); jump_nop(at,get_last_line(at)); };
-Conds : Conds Sym Conds { add_asm(at,$2,$1,$1,$2); $$ = $1 }
+      | tWHILE tPO { ln = get_last_line(at); } Conds tPF { add_asm(at,JMF,$4,0,0); add_asm(at,NOP,0,0,0); offset=0; } Body { add_asm(at,JMP,ln,0,0); jump_nop(at,get_last_line(at)); };
+Conds : Conds Sym Conds { add_asm(at,$2,$1,$1,$2); $$ = $1; }
       | tPO Conds tPF { $$ = $2; }
-      | Cond { $$ = $1 };
+      | Cond { $$ = $1; };
 Sym   : tAND { $$ = AND; }
       | tOR { $$ = OR; };
-Cond  : Valeur { $$ =  $1; }
+Cond  : Valeur { $$ = $1; }
       | Valeur tDEG Valeur { add_tmp = tmp_add($1,$3); add_asm(at,EQU,add_tmp,$1,$3); $$ = add_tmp; }
       | Valeur tDIF Valeur { add_tmp = tmp_add($1,$3); add_asm(at,EQU,add_tmp,$1,$3); add_asm(at,NOT,add_tmp,add_tmp,0); $$ = add_tmp; }
       | Valeur tSUP Valeur { add_tmp = tmp_add($1,$3); add_asm(at,SUP,add_tmp,$1,$3); $$ = add_tmp; }
