@@ -7,13 +7,13 @@
 int yylex();
 void yyerror(const char *s);
 
-unsigned short depth = 0;
-unsigned short offset = 0;
-unsigned short ln = 0;
-int add_tmp = 0;
-symtab * st;
-asmtab * at;
+unsigned short depth = 0; // Profondeur courante du programme
+unsigned short offset = 0; // Décalage courant des variables temporaires
+int addr_tmp = 0; // Adresse temporaire utilisée
+symtab * st; // Tableau de symboles
+asmtab * at; // Tableau d'instructions
 
+// Fonction de choix de l'adresse temporaire de retour
 unsigned short tmp_add(unsigned short left, unsigned short right) {
    unsigned short left_tmp = is_tmp(st,left);
    unsigned short right_tmp = is_tmp(st,right);
@@ -45,7 +45,7 @@ Prg  : Func Prg
      | Main;
 Main : tMAIN tPO tPF Body 
      | tINT tMAIN tPO tPF Body ; /* Main */
-Func : Type tID tPO Args tPF Body { printf("fin function"); };  /* Function */
+Func : Type tID tPO Args tPF Body { printf("fin fonction"); };  /* Function */
 Arg  : Type tID ;
 Args : Arg tVIR Args 
      | ;
@@ -62,32 +62,32 @@ Decl: Type tID tPV { add_sym(st,$1,$2,depth); } /* Déclaration sans affectation
     | Type tID tEGAL Valeur tPV { add_sym(st,$1,$2,depth); offset=0; } /* Déclaration avec affectation */
     | tCONST Type tID tEGAL Valeur tPV /*{ valeur dans le code }*/; /* Déclaration de constante */
 Aff: tID tEGAL Valeur tPV { add_asm(at,COP,get_address(st,$1),$3,0); reduce_cop(at); offset=0; } /* Attribution */
-   | tID tMUL tEGAL Valeur tPV { add_tmp = get_address(st,$1); add_asm(at,MUL,add_tmp,add_tmp,$4); offset=0; } /* Multiplication */
-   | tID tDIV tEGAL Valeur tPV { add_tmp = get_address(st,$1); add_asm(at,DIV,add_tmp,add_tmp,$4); offset=0; } /* Division */
-   | tID tADD tEGAL Valeur tPV { add_tmp = get_address(st,$1); add_asm(at,ADD,add_tmp,add_tmp,$4); offset=0; } /* Addition */
-   | tID tSOU tEGAL Valeur tPV { add_tmp = get_address(st,$1); add_asm(at,SOU,add_tmp,add_tmp,$4); offset=0; } /* Soustraction */;
-Valeur: tNB { add_tmp = get_tmp(st,offset++); add_asm(at,AFC,add_tmp,$1,0); $$ = add_tmp;  } /* Nombre */
+   | tID tMUL tEGAL Valeur tPV { addr_tmp = get_address(st,$1); add_asm(at,MUL,addr_tmp,addr_tmp,$4); offset=0; } /* Multiplication */
+   | tID tDIV tEGAL Valeur tPV { addr_tmp = get_address(st,$1); add_asm(at,DIV,addr_tmp,addr_tmp,$4); offset=0; } /* Division */
+   | tID tADD tEGAL Valeur tPV { addr_tmp = get_address(st,$1); add_asm(at,ADD,addr_tmp,addr_tmp,$4); offset=0; } /* Addition */
+   | tID tSOU tEGAL Valeur tPV { addr_tmp = get_address(st,$1); add_asm(at,SOU,addr_tmp,addr_tmp,$4); offset=0; } /* Soustraction */;
+Valeur: tNB { addr_tmp = get_tmp(st,offset++); add_asm(at,AFC,addr_tmp,$1,0); $$ = addr_tmp; } /* Nombre */
       | tID { $$ = get_address(st,$1); } /* Variable */
       | tPO Valeur tPF { $$ = $2; } /* Parenthèses */
-      | Valeur tMUL Valeur { add_tmp = tmp_add($1,$3); add_asm(at,MUL,add_tmp,$1,$3); $$ = add_tmp; } /* Multiplication */
-      | Valeur tDIV Valeur { add_tmp = tmp_add($1,$3); add_asm(at,DIV,add_tmp,$1,$3); $$ = add_tmp; } /* Division */
-      | Valeur tADD Valeur { add_tmp = tmp_add($1,$3); add_asm(at,ADD,add_tmp,$1,$3); $$ = add_tmp; } /* Addition */
-      | Valeur tSOU Valeur { add_tmp = tmp_add($1,$3); add_asm(at,SOU,add_tmp,$1,$3); $$ = add_tmp; } /* Soustraction */
+      | Valeur tMUL Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,MUL,addr_tmp,$1,$3); $$ = addr_tmp; } /* Multiplication */
+      | Valeur tDIV Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,DIV,addr_tmp,$1,$3); $$ = addr_tmp; } /* Division */
+      | Valeur tADD Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,ADD,addr_tmp,$1,$3); $$ = addr_tmp; } /* Addition */
+      | Valeur tSOU Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,SOU,addr_tmp,$1,$3); $$ = addr_tmp; }; /* Soustraction */
 Print : tPRINT tPO Valeur tPF tPV { add_asm(at,PRI,$3,0,0); offset=0; };
 Ctrl  : tIF tPO Conds tPF { add_asm(at,JMF,$3,0,0); add_asm(at,NOP,0,0,0); offset=0;} Body { jump_nop(at,get_last_line(at)); }
       | tWHILE tPO { add_asm(at,CND,0,0,0); } Conds tPF { add_asm(at,JMF,$4,0,0); add_asm(at,NOP,0,0,0); offset=0; } Body { add_asm(at,JMP,0,0,0); jump_nop(at,get_last_line(at)); jump_cnd(at); };
-Conds : Conds Sym Conds { add_asm(at,$2,$1,$1,$2); $$ = $1; }
+Conds : Conds Sym Conds { addr_tmp = tmp_add($1,$3); add_asm(at,$2,addr_tmp,$1,$3); $$ = addr_tmp; }
       | tPO Conds tPF { $$ = $2; }
       | Cond { $$ = $1; };
 Sym   : tAND { $$ = AND; }
       | tOR { $$ = OR; };
 Cond  : Valeur { $$ = $1; }
-      | Valeur tDEG Valeur { add_tmp = tmp_add($1,$3); add_asm(at,EQU,add_tmp,$1,$3); $$ = add_tmp; }
-      | Valeur tDIF Valeur { add_tmp = tmp_add($1,$3); add_asm(at,EQU,add_tmp,$1,$3); add_asm(at,NOT,add_tmp,add_tmp,0); $$ = add_tmp; }
-      | Valeur tSUP Valeur { add_tmp = tmp_add($1,$3); add_asm(at,SUP,add_tmp,$1,$3); $$ = add_tmp; }
-      | Valeur tSUE Valeur { add_tmp = tmp_add($1,$3); add_asm(at,INF,add_tmp,$1,$3); add_asm(at,NOT,add_tmp,add_tmp,0); $$ = add_tmp; }
-      | Valeur tINF Valeur { add_tmp = tmp_add($1,$3); add_asm(at,INF,add_tmp,$1,$3); $$ = add_tmp; }
-      | Valeur tINE Valeur { add_tmp = tmp_add($1,$3); add_asm(at,SUP,add_tmp,$1,$3); add_asm(at,NOT,add_tmp,add_tmp,0); $$ = add_tmp; };
+      | Valeur tDEG Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,EQU,addr_tmp,$1,$3); $$ = addr_tmp; }
+      | Valeur tDIF Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,EQU,addr_tmp,$1,$3); add_asm(at,NOT,addr_tmp,addr_tmp,0); $$ = addr_tmp; }
+      | Valeur tSUP Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,SUP,addr_tmp,$1,$3); $$ = addr_tmp; }
+      | Valeur tSUE Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,INF,addr_tmp,$1,$3); add_asm(at,NOT,addr_tmp,addr_tmp,0); $$ = addr_tmp; }
+      | Valeur tINF Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,INF,addr_tmp,$1,$3); $$ = addr_tmp; }
+      | Valeur tINE Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,SUP,addr_tmp,$1,$3); add_asm(at,NOT,addr_tmp,addr_tmp,0); $$ = addr_tmp; };
 %%
 void yyerror(const char *s) { fprintf(stderr, "%s\n", s); exit(1); }
 int main(void) {

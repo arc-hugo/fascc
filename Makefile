@@ -1,30 +1,36 @@
+LIB=lib
 GRM=main.y
 LEX=main.l
 BIN=main
 
-TESTDIR=test/
+TESTDIR=test
+BUILDDIR=build
 
 CC=gcc
 CFLAGS=-Wall -g
+YFALGS=-Wcounterexamples -d -v
 
-OBJ=asmtab.o symtab.o y.tab.o lex.yy.o
+OBJ=$(BUILDDIR)/asmtab.o $(BUILDDIR)/symtab.o $(BUILDDIR)/y.tab.o $(BUILDDIR)/lex.yy.o
 
 all: $(BIN)
 
-%.o: %.c
+$(BUILDDIR)/%.o: $(LIB)/%.c
+	if [[ ! -d ./$(BUILDDIR) ]]; then\
+		mkdir $(BUILDDIR);\
+	fi
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 
-y.tab.c: $(GRM)
-	yacc -d -v -t $<
+$(LIB)/y.tab.c: $(LIB)/$(GRM)
+	yacc $(YFALGS) -t $< -o $(LIB)/y.tab.c
 
-lex.yy.c: $(LEX)
-	flex $<
+$(LIB)/lex.yy.c: $(LIB)/$(LEX)
+	flex -o $(LIB)/lex.yy.c $<
 
 $(BIN): $(OBJ)
 	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -o $@
 
 clean:
-	rm $(OBJ) y.tab.c lex.yy.c
+	rm $(OBJ) $(LIB)/{y.tab.c,y.tab.h,lex.yy.c,y.output}
 
 test: all
 	for f in $(shell find $(TESTDIR) -name '*.c'); do\
