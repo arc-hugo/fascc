@@ -11,7 +11,7 @@
 
 %%
 
-[ \t\n]+                                {};
+[ \t\n]+                                {}
 [0-9]+                                  {
                                           yylval.num = atoi(yytext);
                                           return tNB;

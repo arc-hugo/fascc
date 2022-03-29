@@ -1,7 +1,7 @@
 LIB=lib
-GRM=main.y
-LEX=main.l
-BIN=main
+GRM=fascc.y
+LEX=fascc.l
+BIN=fascc
 
 TESTDIR=test
 BUILDDIR=build
@@ -35,5 +35,6 @@ clean:
 test: all
 	for f in $(shell find $(TESTDIR) -name '*.c'); do\
 		echo "-------------------------------$$f--------------------------------";\
-		cat $$f | ./$(BIN); cat $$f; echo; \
+		cat $$f | ./$(BIN); printf "\nCODE C:\n\n"; nl $$f; printf "\nCODE ASM:\n\n"; nl -v 0 out; echo; \
 	done
+	rm out

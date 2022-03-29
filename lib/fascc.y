@@ -90,11 +90,12 @@ Cond  : Valeur { $$ = $1; }
       | Valeur tINE Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,SUP,addr_tmp,$1,$3); add_asm(at,NOT,addr_tmp,addr_tmp,0); $$ = addr_tmp; };
 %%
 void yyerror(const char *s) { fprintf(stderr, "%s\n", s); exit(1); }
-int main(void) {
+int main(int argc, char** argv) {
    st = init_st();
    at = init_at();
    yyparse();
-   parse(at);
+   FILE* out = fopen("./out","w");
+   parse(at,out);
    printf("YES\n");
    return 0;
 }

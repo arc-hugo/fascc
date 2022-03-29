@@ -12,19 +12,6 @@ unsigned int get_last_line(asmtab *at) {
    return at->size;
 }
 
-int get_line(asmtab *at, asmcell* c) {
-   asmcell* tmp = at->begin;
-   int count = 0;
-   while (tmp != NULL && tmp != c) {
-      count++;
-      tmp = tmp->next;
-   }
-   if (tmp == NULL) {
-      return -1;
-   }
-   return count;
-}
-
 int add(asmtab * at, inst ins) {
    if (get_last_line(at) == 0) {
       at->begin = malloc(sizeof(asmcell));
@@ -60,7 +47,7 @@ int remove_op(asmtab * at, enum op op, asmcell ** c) {
    return -1;
 }
 
-int add_asm(asmtab * at, enum op op, unsigned short op0, unsigned short op1, unsigned short op2) {
+int add_asm(asmtab * at, enum op op, unsigned int op0, unsigned int op1, unsigned int op2) {
    inst ins = { op, op0, op1, op2 };
    return add(at, ins);
 }
@@ -120,56 +107,59 @@ int jump_cnd(asmtab *at) {
    return ret;
 }
 
-void parse(asmtab * at) {
-   unsigned int line = 0;
+
+void execute(asmtab * at, unsigned int* data, unsigned int max, int (*print)(char const* str,...)) {
+
+}
+
+void export(asmtab * at, FILE* out) {
    asmcell * tmp = at->begin;
    while (tmp != NULL) {
-      printf("%d ",line++);
       switch (tmp->ins.op) {
          case ADD:
-            printf("ADD @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
+            fprintf(out,"ADD @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
             break;
          case MUL:
-            printf("MUL @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
+            fprintf(out,"MUL @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
             break;
          case SOU:
-            printf("SOU @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
+            fprintf(out,"SOU @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
             break;
          case DIV:
-            printf("DIV @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
+            fprintf(out,"DIV @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
             break;
          case COP:
-            printf("COP @%d @%d\n",tmp->ins.op0,tmp->ins.op1);
+            fprintf(out,"COP @%d @%d\n",tmp->ins.op0,tmp->ins.op1);
             break;
          case AFC:
-            printf("AFC @%d %d\n",tmp->ins.op0,tmp->ins.op1);
+            fprintf(out,"AFC @%d %d\n",tmp->ins.op0,tmp->ins.op1);
             break;
          case JMP:
-            printf("JMP %d\n",tmp->ins.op0);
+            fprintf(out,"JMP %d\n",tmp->ins.op0);
             break;
          case JMF:
-            printf("JMF @%d %d\n",tmp->ins.op0,tmp->ins.op1);
+            fprintf(out,"JMF @%d %d\n",tmp->ins.op0,tmp->ins.op1);
             break;
          case INF:
-            printf("INF @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
+            fprintf(out,"INF @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
             break;
          case SUP:
-            printf("SUP @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
+            fprintf(out,"SUP @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
             break;
          case EQU:
-            printf("EQU @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
+            fprintf(out,"EQU @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
             break;
          case PRI:
-            printf("PRI @%d\n",tmp->ins.op0);
+            fprintf(out,"PRI @%d\n",tmp->ins.op0);
             break;
          case AND:
-            printf("AND @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
+            fprintf(out,"AND @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
             break;
          case OR:
-            printf("OR @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
+            fprintf(out,"OR @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
             break;
          case NOT:
-            printf("NOT @%d @%d\n",tmp->ins.op0,tmp->ins.op1);
+            fprintf(out,"NOT @%d @%d\n",tmp->ins.op0,tmp->ins.op1);
             break;
          default:
             break;

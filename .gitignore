@@ -52,7 +52,7 @@ Mkfile.old
 dkms.conf
 
 # Lex/Yacc output
-main
+fascc
 y.output
 lex.yy.c
 y.tab.c
