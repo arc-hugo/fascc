@@ -53,6 +53,7 @@ dkms.conf
 
 # Lex/Yacc output
 fascc
+faastinterp
 y.output
 lex.yy.c
 y.tab.c

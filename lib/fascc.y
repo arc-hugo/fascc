@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
    at = init_at();
    yyparse();
    FILE* out = fopen("./out","w");
-   parse(at,out);
+   export_asm(at,out);
    printf("YES\n");
    return 0;
 }

@@ -1,7 +1,6 @@
 LIB=lib
-GRM=fascc.y
-LEX=fascc.l
-BIN=fascc
+COMP=fascc
+INTER=fastinterp
 
 TESTDIR=test
 BUILDDIR=build
@@ -10,31 +9,36 @@ CC=gcc
 CFLAGS=-Wall -g
 YFALGS=-Wcounterexamples -d -v
 
-OBJ=$(BUILDDIR)/asmtab.o $(BUILDDIR)/symtab.o $(BUILDDIR)/y.tab.o $(BUILDDIR)/lex.yy.o
+OBJCOM=$(BUILDDIR)/asmtab.o
+OBJCOMP=$(BUILDDIR)/symtab.o $(BUILDDIR)/fascc.tab.o $(BUILDDIR)/fascc.yy.o
+OBJINTER=$(BUILDDIR)/fastinterp.tab.o $(BUILDDIR)/fastinterp.yy.o
 
-all: $(BIN)
+all: $(COMP) $(INTER)
 
 $(BUILDDIR)/%.o: $(LIB)/%.c
 	if [[ ! -d ./$(BUILDDIR) ]]; then\
 		mkdir $(BUILDDIR);\
 	fi
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
-$(LIB)/y.tab.c: $(LIB)/$(GRM)
-	yacc $(YFALGS) -t $< -o $(LIB)/y.tab.c
+$(LIB)/%.tab.c: $(LIB)/%.y
+	yacc $(YFALGS) -t $< -o $@
 
-$(LIB)/lex.yy.c: $(LIB)/$(LEX)
-	flex -o $(LIB)/lex.yy.c $<
+$(LIB)/%.yy.c: $(LIB)/%.l
+	flex -o $@ $<
 
-$(BIN): $(OBJ)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -o $@
+$(COMP): $(OBJCOM) $(OBJCOMP)
+	$(CC) $(CFLAGS) $^ -o $@
+
+$(INTER): $(OBJCOM) $(OBJINTER)
+	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
-	rm $(OBJ) $(LIB)/{y.tab.c,y.tab.h,lex.yy.c,y.output}
+	rm $(OBJCOM) $(OBJCOMP) $(OBJINTER) $(LIB)/{*.tab.h,*.output}
 
 test: all
 	for f in $(shell find $(TESTDIR) -name '*.c'); do\
 		echo "-------------------------------$$f--------------------------------";\
-		cat $$f | ./$(BIN); printf "\nCODE C:\n\n"; nl $$f; printf "\nCODE ASM:\n\n"; nl -v 0 out; echo; \
+		cat $$f | ./$(COMP); printf "\nCODE C:\n\n"; nl $$f; printf "\nCODE ASM:\n\n"; nl -v 0 out; echo; \
 	done
 	rm out

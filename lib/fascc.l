@@ -4,7 +4,7 @@
 #include <string.h>
 #include "symtab.h"
 #include "asmtab.h"
-#include "y.tab.h"
+#include "fascc.tab.h"
 %}
 
 %option noyywrap

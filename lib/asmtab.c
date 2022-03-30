@@ -54,8 +54,8 @@ int add_asm(asmtab * at, enum op op, unsigned int op0, unsigned int op1, unsigne
 
 int reduce_cop(asmtab * at) {
    if (at->end->ins.op == COP && 
-      at->end->previous->ins.op == AFC &&
-      at->end->previous->ins.op0 == at->end->ins.op1) {
+         at->end->previous->ins.op == AFC &&
+         at->end->previous->ins.op0 == at->end->ins.op1) {
       at->end->previous->ins.op0 = at->end->ins.op0;
       asmcell * tmp = at->end;
       at->end = at->end->previous;
@@ -107,12 +107,113 @@ int jump_cnd(asmtab *at) {
    return ret;
 }
 
-
-void execute(asmtab * at, unsigned int* data, unsigned int max, int (*print)(char const* str,...)) {
-
+asmcell* jump(asmcell * c, unsigned int pc, unsigned int add) {
+   while (c != NULL && pc < add) {
+      c = c->next;
+      pc++;
+   }
+   while (c != NULL && pc > add) {
+      c = c->previous;
+      pc--;
+   }
+   return c;
 }
 
-void export(asmtab * at, FILE* out) {
+void execute(asmtab * at, unsigned int* data, unsigned int max, int (*print)(char const* str,...)) {
+   asmcell * pp = at->begin;
+   unsigned int pc = 0;
+   unsigned int add = 0;
+   while (pp != NULL) {
+      switch (pp->ins.op) {
+         case ADD:
+            *(data+pp->ins.op0) = *(data+pp->ins.op1) + *(data+pp->ins.op2);
+            pp = pp->next;
+            pc++;
+            break;
+         case MUL:
+            *(data+pp->ins.op0) = *(data+pp->ins.op1) * *(data+pp->ins.op2);
+            pp = pp->next;
+            pc++;
+            break;
+         case SOU:
+            *(data+pp->ins.op0) = *(data+pp->ins.op1) - *(data+pp->ins.op2);
+            pp = pp->next;
+            pc++;
+            break;
+         case DIV:
+            *(data+pp->ins.op0) = *(data+pp->ins.op1) / *(data+pp->ins.op2);
+            pp = pp->next;
+            pc++;
+            break;
+         case COP:
+            *(data+pp->ins.op0) = *(data+pp->ins.op1);
+            pp = pp->next;
+            pc++;
+            break;
+         case AFC:
+            *(data+pp->ins.op0) = pp->ins.op1;
+            pp = pp->next;
+            pc++;
+            break;
+         case JMP:
+            add = pp->ins.op0;
+            pp = jump(pp, pc, add);
+            pc = add;
+            break;
+         case JMF:
+            if (*(data+pp->ins.op0) == 0) {
+               add = pp->ins.op1;
+               pp = jump(pp, pc, add);
+               pc = add;
+            } else {
+               pp = pp->next;
+               pc++;
+            }
+            break;
+         case INF:
+            *(data+pp->ins.op0) = *(data+pp->ins.op1) < *(data+pp->ins.op2);
+            pp = pp->next;
+            pc++;
+            break;
+         case SUP:
+            *(data+pp->ins.op0) = *(data+pp->ins.op1) < *(data+pp->ins.op2);
+            pp = pp->next;
+            pc++;
+            break;
+         case EQU:
+            *(data+pp->ins.op0) = *(data+pp->ins.op1) == *(data+pp->ins.op2);
+            pp = pp->next;
+            pc++;
+            break;
+         case PRI:
+            printf("%d\n",*(data+pp->ins.op0));
+            pp = pp->next;
+            pc++;
+            break;
+         case AND:
+            *(data+pp->ins.op0) = *(data+pp->ins.op1) && *(data+pp->ins.op2);
+            pp = pp->next;
+            pc++;
+            break;
+         case OR:
+            *(data+pp->ins.op0) = *(data+pp->ins.op1) || *(data+pp->ins.op2);
+            pp = pp->next;
+            pc++;
+            break;
+         case NOT:
+            *(data+pp->ins.op0) = !(*(data+pp->ins.op1));
+            pp = pp->next;
+            pc++;
+            break;
+         default:
+            pp = pp->next;
+            pc++;
+            break;
+      }
+   }
+}
+
+void export_asm(asmtab * at, FILE* out) {
    asmcell * tmp = at->begin;
    while (tmp != NULL) {
       switch (tmp->ins.op) {
