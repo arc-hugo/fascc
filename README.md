@@ -1,5 +1,5 @@
 # FASCC
-Première partie du Projet Systèmes Informatiques visant à réaliser un compilateur de C simplifié grâce à LEX/YACC.
+Première partie du Projet Systèmes Informatiques visant à réaliser un compilateur de C simplifié grâce à LEX/YACC.  
 FASCC permet de compiler un code C minimal en code assembleur pour une future architecture 16bits.
 
 ## Fonctionnalités
