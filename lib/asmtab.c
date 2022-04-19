@@ -17,6 +17,7 @@ int add(asmtab * at, inst ins) {
       at->begin = malloc(sizeof(asmcell));
       at->end = at->begin;
       at->begin->ins = ins;
+      at->begin->line = 0;
       at->begin->previous = NULL;
       at->begin->next = NULL;
    } else {
@@ -25,6 +26,7 @@ int add(asmtab * at, inst ins) {
       at->end = at->end->next;
       at->end->next = NULL;
       at->end->ins = ins;
+      at->end->line = get_last_line(at);
    }
    at->size++;
    return 0;
@@ -32,17 +34,15 @@ int add(asmtab * at, inst ins) {
 
 int remove_op(asmtab * at, enum op op, asmcell ** c) {
    asmcell * tmp = at->end;
-   int line = 0;
    while (tmp != NULL && tmp->ins.op != op) {
       tmp = tmp->previous;
-      line++;
    }
    if (tmp != NULL) {
       tmp->previous->next = tmp->next;
       tmp->next->previous = tmp->previous;
       *c = tmp;
       at->size--;
-      return (at->size+1)-line;
+      return tmp->line;
    }
    return -1;
 }
@@ -61,6 +61,7 @@ int reduce_cop(asmtab * at) {
       at->end = at->end->previous;
       free(tmp);
       at->end->next = NULL;
+      at->end->line--;
       at->size--;
    }
    return 0;
@@ -76,10 +77,10 @@ int jump_nop(asmtab *at, unsigned int ln) {
          tmp = tmp->next;
          if (tmp->ins.op == JMF) {
             tmp->ins.op1--;
-         }
-         if (tmp->ins.op == JMP) {
+         } else if (tmp->ins.op == JMP && tmp->ins.op0 > ret) {
             tmp->ins.op0--;
          }
+         tmp->line--;
       }
       free(*add);
    }
@@ -95,11 +96,12 @@ int jump_cnd(asmtab *at) {
       at->end->ins.op0 = ret;
       while (tmp != at->end) {
          tmp = tmp->next;
-         if (tmp->ins.op == JMP) {
+         if (tmp->ins.op == JMP && tmp->ins.op0 > ret) {
             tmp->ins.op0--;
          } else if (tmp->ins.op == JMF) {
             tmp->ins.op1--;
          }
+         tmp->line--;
       }
       free(*add);
    }
@@ -119,7 +121,7 @@ asmcell* jump(asmcell * c, unsigned int pc, unsigned int add) {
    return c;
 }
 
-void execute(asmtab * at, unsigned int* data, unsigned int max, int (*print)(char const* str,...)) {
+void execute(asmtab * at, unsigned int* data, unsigned int max) {
    asmcell * pp = at->begin;
    unsigned int pc = 0;
    unsigned int add = 0;

@@ -32,6 +32,7 @@ typedef struct inst {
 struct asmcell;
 typedef struct asmcell {
    inst ins;
+   unsigned int line;
    struct asmcell* next;
    struct asmcell* previous;
 } asmcell;
@@ -48,7 +49,7 @@ int add_asm(asmtab * at, enum op op, unsigned int op0, unsigned int op1, unsigne
 int reduce_cop(asmtab * at);
 int jump_nop(asmtab * at, unsigned int ln);
 int jump_cnd(asmtab * at);
-void execute(asmtab * at, unsigned int* data, unsigned int max, int (*printf)(const char* str,...));
+void execute(asmtab * at, unsigned int* data, unsigned int max);
 void export_asm(asmtab * at, FILE* out);
 
 #endif
