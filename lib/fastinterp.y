@@ -39,7 +39,7 @@ void yyerror(const char *s) { fprintf(stderr, "%s\n", s); exit(1); }
 int main(int argc, char** argv) {
    at = init_at();
    yyparse();
-   execute(at,data,MAX_DATA,printf);
+   execute(at,data,MAX_DATA);
    printf("END\n");
    return 0;
 }

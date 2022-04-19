@@ -54,9 +54,10 @@ dkms.conf
 # Lex/Yacc output
 fascc
 fastinterp
-y.output
-lex.yy.c
-y.tab.c
-y.tab.h
+*.output
+*.yy.c
+*.tab.c
+*.tab.h
 .vscode/settings.json
 build/
+out
