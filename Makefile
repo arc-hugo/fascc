@@ -39,6 +39,9 @@ clean:
 test: all
 	for f in $(shell find $(TESTDIR) -name '*.c'); do\
 		echo "-------------------------------$$f--------------------------------";\
-		cat $$f | ./$(COMP); printf "\nCODE C:\n\n"; nl $$f; printf "\nCODE ASM:\n\n"; nl -v 0 out; echo; \
+		cat $$f | ./$(COMP);\
+		printf "\nCODE C:\n\n"; nl $$f;\
+		printf "\nCODE ASM:\n\n"; nl -v 0 out;\
+		printf "\nINTERPRETATION:\n\n"; cat out | ./$(INTER); echo; \
 	done
 	rm out

@@ -178,7 +178,7 @@ void execute(asmtab * at, unsigned int* data, unsigned int max) {
             pc++;
             break;
          case SUP:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) < *(data+pp->ins.op2);
+            *(data+pp->ins.op0) = *(data+pp->ins.op1) > *(data+pp->ins.op2);
             pp = pp->next;
             pc++;
             break;
