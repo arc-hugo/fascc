@@ -21,6 +21,7 @@ enum op {
    CLL, // Sauvegarde de l'adresse de retour et décalage du base pointer lors d'un appel de fonction
    PSH, // Pousse l'argument d'une fonction
    RET, // Décalage du base pointer et sortie vers l'adresse de retour de la fonction
+   SRT, // Indication du début de la fonction main
    NOP, // Instruction vide
    CND // Instruction vide précédent des conditions
 };

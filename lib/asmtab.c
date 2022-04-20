@@ -5,6 +5,7 @@
 asmtab * init_at() {
    asmtab * at = malloc(sizeof(asmtab));
    at->size = 0;
+   add_asm(at, SRT, 0, 0, 0);
    return at;
 }
 

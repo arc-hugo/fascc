@@ -14,28 +14,28 @@ int height(symtab * st) {
 }
 
 int push(symtab * st, variable var) {
-   cell * temp = malloc(sizeof(cell));
+   symcell * temp = malloc(sizeof(symcell));
    temp->var = var;
    temp->next = st->begin;
    st->begin = temp;
    return st->height++;
 }
 
-int pop(symtab * st, cell * c) {
+int pop(symtab * st, symcell * c) {
    if (height(st) == 0) {
       return -1;
    }
    c->next = st->begin->next;
    c->var = st->begin->var;
-   cell * tmp = st->begin->next;
+   symcell * tmp = st->begin->next;
    free(st->begin);
    st->begin = tmp;
    st->height--;
    return 0;
 }
 
-int get_address(symtab * st, char* name) {
-   cell * temp = st->begin;
+int get_sym_address(symtab * st, char* name) {
+   symcell * temp = st->begin;
    while (temp != NULL && strcmp(temp->var.name,name) != 0) {
       temp = temp->next;
    }
@@ -47,7 +47,7 @@ int get_address(symtab * st, char* name) {
 }
 
 int add_sym(symtab * st, enum type t, char* name, unsigned short depth) {
-   if (get_address(st, name) == -1) {
+   if (get_sym_address(st, name) == -1) {
       variable var = {strdup(name), height(st), t, depth};
       return push(st, var);
    }
@@ -63,7 +63,7 @@ unsigned short is_tmp(symtab * st, unsigned short add) {
 }
 
 int remove_depth(symtab * st, unsigned short depth) {
-   cell * temp = malloc(sizeof(cell));
+   symcell * temp = malloc(sizeof(symcell));
    unsigned short ret = pop(st, temp);
    while (ret == 0 && temp->var.depth >= depth) {
       ret = pop(st, temp);
