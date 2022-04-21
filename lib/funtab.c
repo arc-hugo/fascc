@@ -10,11 +10,11 @@ funtab * init_ft() {
    return ft;
 }
 
-int height(funtab * ft) {
+int height_ft(funtab * ft) {
    return ft->height;
 }
 
-int push(funtab * ft, function fun) {
+int push_ft(funtab * ft, function fun) {
    funcell * temp = malloc(sizeof(funcell));
    temp->fun = fun;
    temp->next = ft->begin;
@@ -22,8 +22,8 @@ int push(funtab * ft, function fun) {
    return ft->height++;
 }
 
-int pop(funtab * ft, funcell * c) {
-   if (height(ft) == 0) {
+/*int pop_ft(funtab * ft, funcell * c) {
+   if (height_ft(ft) == 0) {
       return -1;
    }
    c->next = ft->begin->next;
@@ -33,7 +33,7 @@ int pop(funtab * ft, funcell * c) {
    ft->begin = tmp;
    ft->height--;
    return 0;
-}
+}*/
 
 int get_fun(funtab *ft, char *name, function* fun) {
    funcell * temp = ft->begin;
@@ -66,7 +66,7 @@ int is_fun_present(funtab *ft, char* name) {
 
 int add_fun(funtab *ft, function *fun) {
    if (is_fun_present(ft,fun->name)) {
-      return push(ft, *fun);
+      return push_ft(ft, *fun);
    }
    return -1;
 }

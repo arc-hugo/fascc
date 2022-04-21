@@ -10,7 +10,7 @@ CFLAGS=-Wall -g
 YFALGS=-Wcounterexamples -d -v
 
 OBJCOM=$(BUILDDIR)/asmtab.o
-OBJCOMP=$(BUILDDIR)/symtab.o $(BUILDDIR)/fascc.tab.o $(BUILDDIR)/fascc.yy.o
+OBJCOMP=$(BUILDDIR)/symtab.o $(BUILDDIR)/function.o $(BUILDDIR)/funtab.o $(BUILDDIR)/fascc.tab.o $(BUILDDIR)/fascc.yy.o
 OBJINTER=$(BUILDDIR)/fastinterp.tab.o $(BUILDDIR)/fastinterp.yy.o
 
 all: $(COMP) $(INTER)
@@ -34,7 +34,7 @@ $(INTER): $(OBJCOM) $(OBJINTER)
 	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
-	rm $(OBJCOM) $(OBJCOMP) $(OBJINTER) $(LIB)/{*.tab.h,*.output}
+	rm $(COMP) $(INTER) $(OBJCOM) $(OBJCOMP) $(OBJINTER) $(LIB)/{*.tab.h,*.output}
 
 test: all
 	for f in $(shell find $(TESTDIR) -name '*.c'); do\
