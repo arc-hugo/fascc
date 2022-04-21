@@ -1,7 +1,7 @@
-#include <cstddef>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "function.h"
 #include "funtab.h"
 
 funtab * init_ft() {
@@ -14,7 +14,7 @@ int height(funtab * ft) {
    return ft->height;
 }
 
-int push(funtab * ft, fonction fun) {
+int push(funtab * ft, function fun) {
    funcell * temp = malloc(sizeof(funcell));
    temp->fun = fun;
    temp->next = ft->begin;
@@ -35,7 +35,7 @@ int pop(funtab * ft, funcell * c) {
    return 0;
 }
 
-int get_fun_address(funtab *ft, char *name) {
+int get_fun(funtab *ft, char *name, function* fun) {
    funcell * temp = ft->begin;
    while (temp != NULL && strcmp(temp->fun.name, name) != 0) {
       temp = temp->next;
@@ -43,26 +43,30 @@ int get_fun_address(funtab *ft, char *name) {
    if (temp == NULL) {
       return -1;
    } else {
+      fun->add = temp->fun.add;
+      fun->name = temp->fun.name;
+      fun->t = temp->fun.t;
+      fun->argc = temp->fun.argc;
+      fun->begin = temp->fun.begin;
       return temp->fun.add;
    }
 }
 
-int get_argc(funtab *ft, char *name) {
+int is_fun_present(funtab *ft, char* name) {
    funcell * temp = ft->begin;
    while (temp != NULL && strcmp(temp->fun.name, name) != 0) {
       temp = temp->next;
    }
    if (temp == NULL) {
-      return -1;
+      return 0;
    } else {
-      return temp->fun.argc;
+      return 1;
    }
 }
 
-int add_fun(funtab *ft, enum type t, char *name, unsigned int add, unsigned int argc) {
-   if (get_fun_address(ft,name) == -1) {
-         fonction fun = {strdup(name),add,t,argc};
-         return push(ft, fun);
+int add_fun(funtab *ft, function *fun) {
+   if (is_fun_present(ft,fun->name)) {
+      return push(ft, *fun);
    }
    return -1;
 }
