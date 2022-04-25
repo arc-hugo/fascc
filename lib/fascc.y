@@ -88,25 +88,20 @@ Valeur: tNB { addr_tmp = get_tmp(st,offset++); add_asm(at,AFC,addr_tmp,$1,0); $$
       | Valeur tDIV Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,DIV,addr_tmp,$1,$3); $$ = addr_tmp; } /* Division */
       | Valeur tADD Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,ADD,addr_tmp,$1,$3); $$ = addr_tmp; } /* Addition */
       | Valeur tSOU Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,SOU,addr_tmp,$1,$3); $$ = addr_tmp; }; /* Soustraction */
-Call  : tID tPO { ret_add = get_fun(ft,$1,call);
+Call  : tID tPO Args tPF tPV { ret_add = get_fun(ft,$1,call);
       if (ret_add < 0) 
          yyerror("UNDEFINED FUNCTION");
-      add_asm(at,CLL,get_tmp(st,0),0,0);
-      add_asm(at,NOP,0,0,0);
-      }
-      Args tPF tPV { 
       if (arg_count != call->argc) 
          yyerror("ARG COUNT ERROR"); 
       arg_count=0;
       offset=0;
-      add_asm(at,JMP,call->add,0,0);
-      jump_call(at,get_last_line(at));
+      add_asm(at,CLL,get_tmp(st,0),get_last_line(at)+1,call->add);
       };
 Args  : Arg tVIR Args
       | Arg
       | ;
 Arg   : Valeur {
-      add_asm(at,COP,$1,0,0); 
+      add_asm(at,COP,get_tmp(st,offset+2),$1,0); 
       reduce_cop(at);
       arg_count++;
       offset=arg_count;}

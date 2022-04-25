@@ -248,14 +248,16 @@ void execute(asmtab * at, unsigned int* data, unsigned int max) {
             *(data+pp->ins.op0+bp) = pp->ins.op0+2;
             *(data+pp->ins.op0+bp+1) = pp->ins.op1;
             bp += (pp->ins.op0+2);
-            pp = pp->next;
-            pc++;
+            add = pp->ins.op2;
+            pp = jump(pp, pc, add);
+            pc = add;
             break;
          case RET:
             bp -= 2;
-            pp = jump(pp, pc, *(data+bp+1));
-            pc = *(data+bp+1);
-            bp -= *(data+bp);
+            add = *(data+bp+1);
+            pp = jump(pp, pc, add);
+            pc = add;
+            bp -= *(data+bp)-2;
             break;
          default:
             pp = pp->next;
@@ -315,7 +317,7 @@ void export_asm(asmtab * at, FILE* out) {
             fprintf(out,"NOT @%d @%d\n",tmp->ins.op0,tmp->ins.op1);
             break;
          case CLL:
-            fprintf(out,"CLL %d @%d\n",tmp->ins.op0,tmp->ins.op1);
+            fprintf(out,"CLL %d @%d @%d\n",tmp->ins.op0,tmp->ins.op1, tmp->ins.op2);
             break;
          case RET:
             fprintf(out,"RET\n");
