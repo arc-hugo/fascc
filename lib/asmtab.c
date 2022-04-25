@@ -5,7 +5,6 @@
 asmtab * init_at() {
    asmtab * at = malloc(sizeof(asmtab));
    at->size = 0;
-   add_asm(at, SRT, 0, 0, 0);
    return at;
 }
 
@@ -55,7 +54,11 @@ int add_asm(asmtab * at, enum op op, unsigned int op0, unsigned int op1, unsigne
 
 int reduce_cop(asmtab * at) {
    if (at->end->ins.op == COP && 
-         at->end->previous->ins.op == AFC &&
+         (at->end->previous->ins.op == AFC ||
+          at->end->previous->ins.op == ADD ||
+          at->end->previous->ins.op == SOU ||
+          at->end->previous->ins.op == MUL ||
+          at->end->previous->ins.op == DIV) &&
          at->end->previous->ins.op0 == at->end->ins.op1) {
       at->end->previous->ins.op0 = at->end->ins.op0;
       asmcell * tmp = at->end;
@@ -89,6 +92,22 @@ int jump_nop(asmtab *at, unsigned int ln) {
    return ret;
 }
 
+int jump_call(asmtab *at, unsigned int ln) {
+   asmcell** add = malloc(sizeof(asmcell*));
+   int ret = remove_op(at, NOP, add);
+   if (ret >= 0 && (*add)->previous != NULL) {
+      asmcell* tmp = *add;
+      tmp->previous->ins.op1 = ln-1;
+      while (ret >= 0 && tmp != NULL && tmp != at->end) {
+         tmp = tmp->next;
+         tmp->line--;
+      }
+      free(*add);
+   }
+   free(add);
+   return ret;
+}
+
 int jump_cnd(asmtab *at) {
    asmcell** add = malloc(sizeof(asmcell*));
    int ret = remove_op(at, CND, add);
@@ -110,6 +129,21 @@ int jump_cnd(asmtab *at) {
    return ret;
 }
 
+void set_main_asm(asmtab *at, unsigned int ln) {
+   inst in = {JMP,ln+1,0,0};
+   asmcell* beg = malloc(sizeof(asmcell));
+   beg->line = 0;
+   beg->previous = NULL;
+   beg->ins = in;
+   beg->next = at->begin;
+   at->begin = beg;
+   at->size++;
+   while (beg->next != NULL) {
+      beg = beg->next;
+      beg->line++;
+   }
+}
+
 asmcell* jump(asmcell * c, unsigned int pc, unsigned int add) {
    while (c != NULL && pc < add) {
       c = c->next;
@@ -126,35 +160,37 @@ void execute(asmtab * at, unsigned int* data, unsigned int max) {
    asmcell * pp = at->begin;
    unsigned int pc = 0;
    unsigned int add = 0;
+   unsigned int bp = 0;
    while (pp != NULL) {
+      printf("pc = %d\n",pc);
       switch (pp->ins.op) {
          case ADD:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) + *(data+pp->ins.op2);
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) + *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case MUL:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) * *(data+pp->ins.op2);
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) * *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case SOU:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) - *(data+pp->ins.op2);
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) - *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case DIV:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) / *(data+pp->ins.op2);
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) / *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case COP:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1);
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp);
             pp = pp->next;
             pc++;
             break;
          case AFC:
-            *(data+pp->ins.op0) = pp->ins.op1;
+            *(data+pp->ins.op0+bp) = pp->ins.op1;
             pp = pp->next;
             pc++;
             break;
@@ -174,39 +210,52 @@ void execute(asmtab * at, unsigned int* data, unsigned int max) {
             }
             break;
          case INF:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) < *(data+pp->ins.op2);
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) < *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case SUP:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) > *(data+pp->ins.op2);
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) > *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case EQU:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) == *(data+pp->ins.op2);
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) == *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case PRI:
-            printf("%d\n",*(data+pp->ins.op0));
+            printf("%d\n",*(data+pp->ins.op0+bp));
             pp = pp->next;
             pc++;
             break;
          case AND:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) && *(data+pp->ins.op2);
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) && *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case OR:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) || *(data+pp->ins.op2);
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) || *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case NOT:
-            *(data+pp->ins.op0) = !(*(data+pp->ins.op1));
+            *(data+pp->ins.op0+bp) = !(*(data+pp->ins.op1+bp));
             pp = pp->next;
             pc++;
+            break;
+         case CLL:
+            *(data+pp->ins.op0+bp) = pp->ins.op0+2;
+            *(data+pp->ins.op0+bp+1) = pp->ins.op1;
+            bp += (pp->ins.op0+2);
+            pp = pp->next;
+            pc++;
+            break;
+         case RET:
+            bp -= 2;
+            pp = jump(pp, pc, *(data+bp+1));
+            pc = *(data+bp+1);
+            bp -= *(data+bp);
             break;
          default:
             pp = pp->next;
@@ -264,6 +313,12 @@ void export_asm(asmtab * at, FILE* out) {
             break;
          case NOT:
             fprintf(out,"NOT @%d @%d\n",tmp->ins.op0,tmp->ins.op1);
+            break;
+         case CLL:
+            fprintf(out,"CLL %d @%d\n",tmp->ins.op0,tmp->ins.op1);
+            break;
+         case RET:
+            fprintf(out,"RET\n");
             break;
          default:
             break;

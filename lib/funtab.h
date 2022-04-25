@@ -19,4 +19,6 @@ funtab * init_ft();
 int add_fun(funtab * ft, function *fun);
 int get_fun(funtab * ft, char* name, function* fun);
 
+void set_main_fun(funtab* ft);
+
 #endif

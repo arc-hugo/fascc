@@ -1,8 +1,11 @@
 %{
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "type.h"
+#include "function.h"
 #include "asmtab.h"
+#include "funtab.h"
 #include "symtab.h"
 
 int yylex();
@@ -11,10 +14,14 @@ void yyerror(const char *s);
 unsigned int depth = 0; // Profondeur courante du programme
 unsigned int offset = 0; // Décalage courant des variables temporaires
 unsigned int ret_add = 0; // Adresse de retour de function
-unsigned int base = 0; // Décalage du pointeur de base
 unsigned int addr_tmp = 0; // Adresse temporaire utilisée
 unsigned int arg_count = 0; // Adresse du prochain argument d'une fonction
+
+function* fun; // Création de fonction
+function* call;// Appel de fonction
+
 symtab * st; // Tableau de symboles
+funtab * ft; // Tableau de fonctions
 asmtab * at; // Tableau d'instructions
 
 // Fonction de choix de l'adresse temporaire de retour
@@ -47,13 +54,15 @@ unsigned int tmp_add(unsigned int left, unsigned int right) {
 %%
 Prg  : Func Prg
      | Main;
-Main : tMAIN tPO tPF Body 
-     | tINT tMAIN tPO tPF Body ; /* Main */
-Func : Type tID tPO Args tPF Body { add_asm(at,RET,0 /* addresse retour */,base,0); };  /* Function */
-Args : Arg tVIR Args
-     | Arg
+Main : MType tMAIN { set_main_asm(at,get_last_line(at)); set_main_fun(ft); } tPO tPF Body ; /* Main */
+MType: tINT
+     | tVOID
      | ;
-Arg  : Type tID ;
+Func : Type tID { fun = init_fun($2,get_last_line(at),$1); } tPO DArgs tPF { add_fun(ft,fun); } Body { add_asm(at,RET,0,0,0); };  /* Fonction */
+DArgs: DArg tVIR DArgs
+     | DArg
+     | ;
+DArg : Type tID { add_arg(fun,$2,$1); add_sym(st,$1,$2,1); };
 Type : tINT { $$ = INT; }
      | tVOID { $$ = VOID; };
 Body : tAO { depth++; } Insts tAF { remove_depth(st,depth); depth--; }; /* Corps de fonction/structure de contrôle */
@@ -79,7 +88,28 @@ Valeur: tNB { addr_tmp = get_tmp(st,offset++); add_asm(at,AFC,addr_tmp,$1,0); $$
       | Valeur tDIV Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,DIV,addr_tmp,$1,$3); $$ = addr_tmp; } /* Division */
       | Valeur tADD Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,ADD,addr_tmp,$1,$3); $$ = addr_tmp; } /* Addition */
       | Valeur tSOU Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,SOU,addr_tmp,$1,$3); $$ = addr_tmp; }; /* Soustraction */
-Call: tID tPO tPF
+Call  : tID tPO { ret_add = get_fun(ft,$1,call);
+      if (ret_add < 0) 
+         yyerror("UNDEFINED FUNCTION");
+      add_asm(at,CLL,get_tmp(st,0),0,0);
+      add_asm(at,NOP,0,0,0);
+      }
+      Args tPF tPV { 
+      if (arg_count != call->argc) 
+         yyerror("ARG COUNT ERROR"); 
+      arg_count=0;
+      offset=0;
+      add_asm(at,JMP,call->add,0,0);
+      jump_call(at,get_last_line(at));
+      };
+Args  : Arg tVIR Args
+      | Arg
+      | ;
+Arg   : Valeur {
+      add_asm(at,COP,$1,0,0); 
+      reduce_cop(at);
+      arg_count++;
+      offset=arg_count;}
 Print : tPRINT tPO Valeur tPF tPV { add_asm(at,PRI,$3,0,0); offset=0; };
 Ctrl  : tIF tPO Conds tPF { add_asm(at,JMF,$3,0,0); add_asm(at,NOP,0,0,0); offset=0;} Body { jump_nop(at,get_last_line(at)); }
       | tWHILE tPO { add_asm(at,CND,0,0,0); } Conds tPF { add_asm(at,JMF,$4,0,0); add_asm(at,NOP,0,0,0); offset=0; } Body { add_asm(at,JMP,0,0,0); jump_nop(at,get_last_line(at)); jump_cnd(at); };
@@ -99,6 +129,8 @@ Cond  : Valeur { $$ = $1; }
 void yyerror(const char *s) { fprintf(stderr, "%s\n", s); exit(1); }
 int main(int argc, char** argv) {
    st = init_st();
+   call = malloc(sizeof(function));
+   ft = init_ft();
    at = init_at();
    yyparse();
    FILE* out = fopen("./out","w");

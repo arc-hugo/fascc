@@ -65,8 +65,16 @@ int is_fun_present(funtab *ft, char* name) {
 }
 
 int add_fun(funtab *ft, function *fun) {
-   if (is_fun_present(ft,fun->name)) {
+   if (!is_fun_present(ft,fun->name)) {
       return push_ft(ft, *fun);
    }
    return -1;
+}
+
+void set_main_fun(funtab *ft) {
+   funcell* temp = ft->begin;
+   while (temp != NULL) {
+      temp->fun.add++;
+      temp = temp->next;
+   }
 }
