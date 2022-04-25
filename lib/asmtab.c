@@ -87,17 +87,11 @@ int jump_nop(asmtab *at, unsigned int ln) {
                }
                break;
             case CLL:
-               tmp->ins.op2--;
             case JMF:
                tmp->ins.op1--;
                break;
             default:
                break;
-         }
-         if (tmp->ins.op == JMF) {
-            tmp->ins.op1--;
-         } else if (tmp->ins.op == JMP && tmp->ins.op0 > ret) {
-            tmp->ins.op0--;
          }
          tmp->line--;
       }
@@ -120,7 +114,6 @@ int jump_cnd(asmtab *at) {
                tmp->ins.op0--;
                break;
             case CLL:
-               tmp->ins.op2--;
             case JMF:
                tmp->ins.op1--;
                break;
@@ -218,7 +211,7 @@ void execute(asmtab * at, unsigned int* data, unsigned int max) {
             pc = add;
             break;
          case JMF:
-            if (*(data+pp->ins.op0) == 0) {
+            if (*(data+pp->ins.op0+bp) == 0) {
                add = pp->ins.op1;
                pp = jump(pp, pc, add);
                pc = add;

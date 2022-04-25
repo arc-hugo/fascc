@@ -101,10 +101,10 @@ Args  : Arg tVIR Args
       | Arg
       | ;
 Arg   : Valeur {
-      add_asm(at,COP,get_tmp(st,offset+2),$1,0);
+      add_asm(at,COP,get_tmp(st,arg_count+2),$1,0);
       // TODO reduce_cop
       arg_count++;
-      offset=arg_count;}
+      offset=arg_count+2;}
 Print : tPRINT tPO Valeur tPF tPV { add_asm(at,PRI,$3,0,0); offset=0; };
 Ctrl  : tIF tPO Conds tPF { add_asm(at,JMF,$3,0,0); add_asm(at,NOP,0,0,0); offset=0;} Body { jump_nop(at,get_last_line(at)); }
       | tWHILE tPO { add_asm(at,CND,0,0,0); } Conds tPF { add_asm(at,JMF,$4,0,0); add_asm(at,NOP,0,0,0); offset=0; } Body { add_asm(at,JMP,0,0,0); jump_nop(at,get_last_line(at)); jump_cnd(at); };
