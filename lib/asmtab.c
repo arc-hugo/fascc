@@ -59,7 +59,8 @@ int reduce_cop(asmtab * at) {
           at->end->previous->ins.op == SOU ||
           at->end->previous->ins.op == MUL ||
           at->end->previous->ins.op == DIV) &&
-         at->end->previous->ins.op0 == at->end->ins.op1) {
+         at->end->previous->ins.op0 == at->end->ins.op1
+      ) {
       at->end->previous->ins.op0 = at->end->ins.op0;
       asmcell * tmp = at->end;
       at->end = at->end->previous;
@@ -79,27 +80,25 @@ int jump_nop(asmtab *at, unsigned int ln) {
       tmp->previous->ins.op1 = ln-1;
       while (ret >= 0 && tmp != NULL && tmp != at->end) {
          tmp = tmp->next;
+         switch (tmp->ins.op) {
+            case JMP:
+               if (tmp->ins.op0 > ret) {
+                  tmp->ins.op0--;
+               }
+               break;
+            case CLL:
+               tmp->ins.op2--;
+            case JMF:
+               tmp->ins.op1--;
+               break;
+            default:
+               break;
+         }
          if (tmp->ins.op == JMF) {
             tmp->ins.op1--;
          } else if (tmp->ins.op == JMP && tmp->ins.op0 > ret) {
             tmp->ins.op0--;
          }
-         tmp->line--;
-      }
-      free(*add);
-   }
-   free(add);
-   return ret;
-}
-
-int jump_call(asmtab *at, unsigned int ln) {
-   asmcell** add = malloc(sizeof(asmcell*));
-   int ret = remove_op(at, NOP, add);
-   if (ret >= 0 && (*add)->previous != NULL) {
-      asmcell* tmp = *add;
-      tmp->previous->ins.op1 = ln-1;
-      while (ret >= 0 && tmp != NULL && tmp != at->end) {
-         tmp = tmp->next;
          tmp->line--;
       }
       free(*add);
@@ -116,10 +115,17 @@ int jump_cnd(asmtab *at) {
       at->end->ins.op0 = ret;
       while (tmp != at->end) {
          tmp = tmp->next;
-         if (tmp->ins.op == JMP && tmp->ins.op0 > ret) {
-            tmp->ins.op0--;
-         } else if (tmp->ins.op == JMF) {
-            tmp->ins.op1--;
+         switch (tmp->ins.op) {
+            case JMP:
+               tmp->ins.op0--;
+               break;
+            case CLL:
+               tmp->ins.op2--;
+            case JMF:
+               tmp->ins.op1--;
+               break;
+            default:
+               break;
          }
          tmp->line--;
       }
@@ -140,6 +146,18 @@ void set_main_asm(asmtab *at, unsigned int ln) {
    at->size++;
    while (beg->next != NULL) {
       beg = beg->next;
+      switch (beg->ins.op) {
+         case JMP:
+            beg->ins.op0++;
+            break;
+         case CLL:
+            beg->ins.op2++;
+         case JMF:
+            beg->ins.op1++;
+            break;
+         default:
+            break;
+      }
       beg->line++;
    }
 }

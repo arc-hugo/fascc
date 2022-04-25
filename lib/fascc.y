@@ -101,8 +101,8 @@ Args  : Arg tVIR Args
       | Arg
       | ;
 Arg   : Valeur {
-      add_asm(at,COP,get_tmp(st,offset+2),$1,0); 
-      reduce_cop(at);
+      add_asm(at,COP,get_tmp(st,offset+2),$1,0);
+      // TODO reduce_cop
       arg_count++;
       offset=arg_count;}
 Print : tPRINT tPO Valeur tPF tPV { add_asm(at,PRI,$3,0,0); offset=0; };
