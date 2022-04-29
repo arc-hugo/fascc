@@ -24,7 +24,10 @@
                                           yylval.num = strtold(yytext,NULL);
                                           return tNB;
                                         }
-"main"                                 { return tMAIN; }
+"main"                                  {
+                                          yylval.string = "main";
+                                          return tMAIN;
+                                        }
 "{"                                     { return tAO; }
 "}"                                     { return tAF; }
 "int"                                   { return tINT; }
