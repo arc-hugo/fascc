@@ -176,38 +176,38 @@ void execute(asmtab * at, unsigned int* data, unsigned int max) {
       printf("%d: ",pc);
       switch (pp->ins.op) {
          case ADD:
-            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) + *(data+pp->ins.op2+bp);
             printf("@%d <- @%d (%d) + @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) + *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case MUL:
-            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) * *(data+pp->ins.op2+bp);
             printf("@%d <- @%d (%d) * @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) * *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case SOU:
-            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) - *(data+pp->ins.op2+bp);
             printf("@%d <- @%d (%d) - @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) - *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case DIV:
-            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) / *(data+pp->ins.op2+bp);
             printf("@%d <- @%d (%d) / @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) / *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case COP:
-            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp);
             printf("@%d <- @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp);
             pp = pp->next;
             pc++;
             break;
          case AFC:
-            *(data+pp->ins.op0+bp) = pp->ins.op1;
             printf("@%d <- %d",pp->ins.op0+bp,pp->ins.op1);
+            *(data+pp->ins.op0+bp) = pp->ins.op1;
             pp = pp->next;
             pc++;
             break;
@@ -230,20 +230,20 @@ void execute(asmtab * at, unsigned int* data, unsigned int max) {
             }
             break;
          case INF:
-            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) < *(data+pp->ins.op2+bp);
             printf("@%d <- @%d (%d) < @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) < *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case SUP:
-            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) > *(data+pp->ins.op2+bp);
             printf("@%d <- @%d (%d) > @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) > *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case EQU:
-            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) == *(data+pp->ins.op2+bp);
             printf("@%d <- @%d (%d) == @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) == *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
@@ -253,20 +253,20 @@ void execute(asmtab * at, unsigned int* data, unsigned int max) {
             pc++;
             break;
          case AND:
-            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) && *(data+pp->ins.op2+bp);
             printf("@%d <- @%d (%d) && @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) && *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case OR:
-            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) || *(data+pp->ins.op2+bp);
             printf("@%d <- @%d (%d) || @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) || *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case NOT:
-            *(data+pp->ins.op0+bp) = !(*(data+pp->ins.op1+bp));
             printf("@%d <- !@%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp));
+            *(data+pp->ins.op0+bp) = !(*(data+pp->ins.op1+bp));
             pp = pp->next;
             pc++;
             break;
@@ -275,7 +275,7 @@ void execute(asmtab * at, unsigned int* data, unsigned int max) {
             *(data+pp->ins.op0+bp+1) = pp->ins.op1;
             bp += pp->ins.op0+2;
             add = pp->ins.op2;
-            printf("call l%d, new bp %d",add,bp);
+            printf("call fun at l%d, new bp %d",add,bp);
             pp = jump(pp, pc, add);
             pc = add;
             break;

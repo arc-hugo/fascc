@@ -3,5 +3,5 @@ int f() {
 }
 
 int main() {
-   print(f());
+   print(10+f());
 }
