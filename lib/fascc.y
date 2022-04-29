@@ -12,7 +12,8 @@ int yylex();
 void yyerror(const char *s);
 
 unsigned int depth = 0; // Profondeur courante du programme
-unsigned int offset = 0; // Décalage courant des variables temporaires
+unsigned int offset = 0; // Décalage des variables temporaires
+unsigned int fun_offset = 0; // Décalage des arguments de fonction
 unsigned int ret_add = 0; // Adresse de retour de function
 unsigned int addr_tmp = 0; // Adresse temporaire utilisée
 unsigned int arg_count = 0; // Adresse du prochain argument d'une fonction
@@ -45,7 +46,7 @@ unsigned int tmp_add(unsigned int left, unsigned int right) {
 %token <num> tNB
 %token <string> tID
 %type <num> Valeur Cond Conds
-%type <type> Type
+%type <type> Type MType
 %type <op> Sym
 %right tEGAL
 %left tADD tSOU
@@ -55,9 +56,9 @@ unsigned int tmp_add(unsigned int left, unsigned int right) {
 Prg  : Func Prg
      | Main;
 Main : MType tMAIN { set_main_asm(at,get_last_line(at)); set_main_fun(ft); fun = init_fun($2,get_last_line(at),$1); add_fun(ft,fun); } tPO tPF Body ; /* Main */
-MType: tINT
-     | tVOID
-     | ;
+MType: tINT { $$ = INT; }
+     | tVOID { $$ = VOID; }
+     | { $$ = VOID; };
 Func : Type tID { fun = init_fun($2,get_last_line(at),$1); } tPO DArgs tPF { add_fun(ft,fun); } Body { add_asm(at,RET,0,0,0); };  /* Fonction */
 DArgs: DArg tVIR DArgs
      | DArg
@@ -85,40 +86,40 @@ Aff: tID tEGAL Valeur tPV { add_asm(at,COP,get_sym_address(st,$1),$3,0); reduce_
 Valeur: tNB { addr_tmp = get_tmp(st,offset++); add_asm(at,AFC,addr_tmp,$1,0); $$ = addr_tmp; } /* Nombre */
       | tID { $$ = get_sym_address(st,$1); } /* Variable */
       | Call {
-      if (call->t == tVOID)
+      if (call->t == VOID)
          yyerror("CANNOT GET VALUE FROM VOID FUNCTION");
-      $$ = get_tmp(st,2);
+
       }
       | tPO Valeur tPF { $$ = $2; } /* Parenthèses */
       | Valeur tMUL Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,MUL,addr_tmp,$1,$3); $$ = addr_tmp; } /* Multiplication */
       | Valeur tDIV Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,DIV,addr_tmp,$1,$3); $$ = addr_tmp; } /* Division */
       | Valeur tADD Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,ADD,addr_tmp,$1,$3); $$ = addr_tmp; } /* Addition */
       | Valeur tSOU Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,SOU,addr_tmp,$1,$3); $$ = addr_tmp; }; /* Soustraction */
-Call  : tID tPO Args tPF tPV { ret_add = get_fun(ft,$1,call);
+Call  : tID tPO { fun_offset=offset; } Args tPF tPV { ret_add = get_fun(ft,$1,call);
       if (ret_add < 0) 
          yyerror("UNDEFINED FUNCTION");
-      if (arg_count != call->argc) 
-         yyerror("ARG COUNT ERROR"); 
+      if (arg_count != call->argc)
+         yyerror("WRONG NUMBER OF ARGUMENTS"); 
+      add_asm(at,CLL,get_tmp(st,fun_offset+2),get_last_line(at)+1,call->add);
       arg_count=0;
-      offset=0;
-      add_asm(at,CLL,get_tmp(st,0),get_last_line(at)+1,call->add);
+      fun_offset=0;
       };
 Args  : Arg tVIR Args
       | Arg
       | ;
 Arg   : Valeur {
-      add_asm(at,COP,get_tmp(st,arg_count+2),$1,0);
+      add_asm(at,COP,get_tmp(st,fun_offset+2),$1,0);
       // TODO reduce_cop
       arg_count++;
-      offset=arg_count+2;};
+      fun_offset++;};
 Return: tRET Valeur {
-      if (fun->t == tVOID)
+      if (fun->t == VOID)
          yyerror("RETURN WITH VALUE IN VOID FUNCTION");
       add_asm(COP,0,$2,0);
       add_asm(RET,0,0,0);
       }
       | tRET {
-      if (fun->t != tVOID) 
+      if (fun->t != VOID) 
          yyerror("RETURN WITHOUT VALUE IN NON-VOID FUNCTION");
       add_asm(RET,0,0,0);
       }
