@@ -48,6 +48,7 @@
 "&&"                                    { return tAND; }
 "||"                                    { return tOR; }
 "print"		                        { return tPRINT; }
+"return"                                { return tRET; }
 ";"           	                        { return tPV; }
 ","                                  { return tVIR; }
 "/*"([^*]|\*+[^*/])*\*+"/"              {}

@@ -41,7 +41,7 @@ unsigned int tmp_add(unsigned int left, unsigned int right) {
 
 %}
 %union {int num; char* string; enum type type; enum op op;}
-%token tMAIN tAO tAF tINT tVOID tIF tWHILE tCONST tEGAL tSOU tADD tMUL tDIV tPO tPF tPV tFL tPRINT tDEG tDIF tSUP tINF tSUE tINE tAND tOR tVIR
+%token tMAIN tAO tAF tINT tVOID tIF tWHILE tCONST tEGAL tSOU tADD tMUL tDIV tPO tPF tPV tFL tPRINT tDEG tDIF tSUP tINF tSUE tINE tAND tOR tVIR tRET
 %token <num> tNB
 %token <string> tID
 %type <num> Valeur Cond Conds
@@ -54,7 +54,7 @@ unsigned int tmp_add(unsigned int left, unsigned int right) {
 %%
 Prg  : Func Prg
      | Main;
-Main : MType tMAIN { set_main_asm(at,get_last_line(at)); set_main_fun(ft); } tPO tPF Body ; /* Main */
+Main : MType tMAIN { set_main_asm(at,get_last_line(at)); set_main_fun(ft); fun = init_fun($2,get_last_line(at),$1); add_fun(ft,fun); } tPO tPF Body ; /* Main */
 MType: tINT
      | tVOID
      | ;
@@ -71,6 +71,7 @@ Insts: Inst Insts
 Inst : Decl
      | Aff
      | Call
+     | Return
      | Print
      | Ctrl ;
 Decl: Type tID tPV { add_sym(st,$1,$2,depth); } /* Déclaration sans affectation */
@@ -83,6 +84,11 @@ Aff: tID tEGAL Valeur tPV { add_asm(at,COP,get_sym_address(st,$1),$3,0); reduce_
    | tID tSOU tEGAL Valeur tPV { addr_tmp = get_sym_address(st,$1); add_asm(at,SOU,addr_tmp,addr_tmp,$4); offset=0; } /* Soustraction */;
 Valeur: tNB { addr_tmp = get_tmp(st,offset++); add_asm(at,AFC,addr_tmp,$1,0); $$ = addr_tmp; } /* Nombre */
       | tID { $$ = get_sym_address(st,$1); } /* Variable */
+      | Call {
+      if (call->t == tVOID)
+         yyerror("CANNOT GET VALUE FROM VOID FUNCTION");
+      $$ = get_tmp(st,2);
+      }
       | tPO Valeur tPF { $$ = $2; } /* Parenthèses */
       | Valeur tMUL Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,MUL,addr_tmp,$1,$3); $$ = addr_tmp; } /* Multiplication */
       | Valeur tDIV Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,DIV,addr_tmp,$1,$3); $$ = addr_tmp; } /* Division */
@@ -104,7 +110,18 @@ Arg   : Valeur {
       add_asm(at,COP,get_tmp(st,arg_count+2),$1,0);
       // TODO reduce_cop
       arg_count++;
-      offset=arg_count+2;}
+      offset=arg_count+2;};
+Return: tRET Valeur {
+      if (fun->t == tVOID)
+         yyerror("RETURN WITH VALUE IN VOID FUNCTION");
+      add_asm(COP,0,$2,0);
+      add_asm(RET,0,0,0);
+      }
+      | tRET {
+      if (fun->t != tVOID) 
+         yyerror("RETURN WITHOUT VALUE IN NON-VOID FUNCTION");
+      add_asm(RET,0,0,0);
+      }
 Print : tPRINT tPO Valeur tPF tPV { add_asm(at,PRI,$3,0,0); offset=0; };
 Ctrl  : tIF tPO Conds tPF { add_asm(at,JMF,$3,0,0); add_asm(at,NOP,0,0,0); offset=0;} Body { jump_nop(at,get_last_line(at)); }
       | tWHILE tPO { add_asm(at,CND,0,0,0); } Conds tPF { add_asm(at,JMF,$4,0,0); add_asm(at,NOP,0,0,0); offset=0; } Body { add_asm(at,JMP,0,0,0); jump_nop(at,get_last_line(at)); jump_cnd(at); };

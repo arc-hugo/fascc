@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "asmtab.h"
 
-#define MAX_DATA 1024
+#define MAX_DATA 4096
 
 int yylex();
 void yyerror(const char *s);
