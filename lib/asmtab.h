@@ -3,22 +3,22 @@
 #include <stdio.h>
 
 enum op {
-   ADD = 0,
-   SOU = 1,
-   MUL = 2,
-   DIV = 3,
-   AND = 4,
-   OR = 5,
-   NOT = 6,
-   COP = 7,
-   AFC = 8,
-   JMP = 9,
-   JMF = 10,
-   INF = 11,
-   SUP = 12,
-   EQU = 13,
-   PRI = 14,
-   NOP,
+   NOP = 0,
+   ADD,
+   SOU,
+   MUL,
+   DIV,
+   AND,
+   OR,
+   NOT,
+   COP,
+   AFC,
+   JMP,
+   JMF,
+   INF,
+   SUP,
+   EQU,
+   PRI,
    CND
 };
 
