@@ -4,22 +4,22 @@
 
 enum op {
    NOP = 0,
-   ADD,
-   SOU,
-   MUL,
-   DIV,
-   AND,
-   OR,
-   NOT,
-   COP,
-   AFC,
-   JMP,
-   JMF,
-   INF,
-   SUP,
-   EQU,
-   PRI,
-   CND
+   ADD = 1,
+   SOU = 2,
+   MUL = 3,
+   DIV = 4,
+   AND = 5,
+   OR = 6,
+   NOT = 7,
+   COP = 8,
+   AFC = 9,
+   JMP = 10,
+   JMF = 11,
+   INF = 12,
+   SUP = 13,
+   EQU = 14,
+   PRI = 15,
+   CND = 16
 };
 
 typedef struct inst {
