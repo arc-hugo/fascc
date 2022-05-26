@@ -1,4 +1,4 @@
-LIB=src
+SRC=src
 COMP=fascc
 INTER=fastinterp
 
@@ -15,16 +15,16 @@ OBJINTER=$(BUILDDIR)/fastinterp.tab.o $(BUILDDIR)/fastinterp.yy.o
 
 all: $(COMP) $(INTER)
 
-$(BUILDDIR)/%.o: $(LIB)/%.c
+$(BUILDDIR)/%.o: $(SRC)/%.c
 	if [[ ! -d ./$(BUILDDIR) ]]; then\
 		mkdir $(BUILDDIR);\
 	fi
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(LIB)/%.tab.c: $(LIB)/%.y
+$(SRC)/%.tab.c: $(SRC)/%.y
 	yacc $(YFALGS) -t $< -o $@
 
-$(LIB)/%.yy.c: $(LIB)/%.l
+$(SRC)/%.yy.c: $(SRC)/%.l
 	flex -o $@ $<
 
 $(COMP): $(OBJCOM) $(OBJCOMP)
@@ -34,7 +34,7 @@ $(INTER): $(OBJCOM) $(OBJINTER)
 	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
-	rm $(COMP) $(INTER) $(OBJCOM) $(OBJCOMP) $(OBJINTER) $(LIB)/{*.tab.h,*.output}
+	rm $(COMP) $(INTER) $(OBJCOM) $(OBJCOMP) $(OBJINTER) $(SRC)/{*.tab.h,*.output}
 
 test: all
 	for f in $(shell find $(TESTDIR) -name '*.c'); do\
