@@ -3,25 +3,24 @@
 #include <stdio.h>
 
 enum op {
+   NOP = 0, // Instruction vide
    ADD = 1, // Addition des valeurs de deux adresses vers une autre
-   MUL, // Multiplication des valeurs de deux adresses vers une autre
-   SOU, // Soustraction des valeurs de deux adresses vers une autre
-   DIV, // Division deq valeurs de deux adresses vers une autre
-   COP, // Copie la valeur d'une adresse vers une autre adresse
-   AFC, // Affecte une valeur à une adresse
-   JMP, // Saut inconditionnel vers une instruction
-   JMF, // Saut vers une instruction si condition dans adresse est fausse
-   INF, // Comparaison inférieur des valeurs de deux adresses vers une autre
-   SUP, // Comparaison supérieur des valeurs de deux adresses vers une autre
-   EQU, // Comparaison égale de deux valeurs de deux adresses vers une adresse
-   PRI, // Affichage de la valeur d'une adresse
-   AND, // ET logique entre deux valeurs vers une adresse
-   OR, // OU logique entre deux valeurs vers une adresse
-   NOT, // NON logique d'une valeurs vers une adresse
-   CLL, // Sauvegarde de l'adresse de retour et décalage du base pointer lors d'un appel de fonction
-   RET, // Décalage du base pointer et sortie vers l'adresse de retour de la fonction
-   NOP, // Instruction vide
-   CND // Instruction vide précédent des conditions
+   SOU = 2, // Soustraction des valeurs de deux adresses vers une autre
+   MUL = 3, // Multiplication des valeurs de deux adresses vers une autre
+   DIV = 4, // Division deq valeurs de deux adresses vers une autre
+   AND = 5, // ET logique entre deux valeurs vers une adresse
+   OR = 6, // OU logique entre deux valeurs vers une adresse
+   NOT = 7, // NON logique d'une valeurs vers une adresse
+   COP = 8, // Copie la valeur d'une adresse vers une autre adresse
+   AFC = 9, // Affecte une valeur à une adresse
+   JMP = 10, // Saut inconditionnel vers une instruction
+   JMF = 11, // Saut vers une instruction si condition dans adresse est fausse
+   INF = 12, // Comparaison inférieur des valeurs de deux adresses vers une autre
+   SUP = 13, // Comparaison supérieur des valeurs de deux adresses vers une autre
+   EQU = 14, // Comparaison égale de deux valeurs de deux adresses vers une adresse
+   PRI = 15, // Affichage de la valeur d'une adresse
+   CLL = 16, // Sauvegarde de l'adresse de retour et décalage du base pointer lors d'un appel de fonction
+   RET = 17, // Décalage du base pointer et sortie vers l'adresse de retour de la fonction 
 };
 
 typedef struct inst {
