@@ -52,9 +52,8 @@ unsigned int get_last_line(asmtab * at);
 int add_asm(asmtab * at, enum op op, unsigned int op0, unsigned int op1, unsigned int op2);
 int reduce_cop(asmtab * at);
 
-int jump_nop(asmtab * at, unsigned int ln);
-int jump_call(asmtab * at, unsigned int ln);
-int jump_cnd(asmtab * at);
+int jump_if(asmtab * at, unsigned int pos, unsigned int ln);
+int jump_while(asmtab * at, unsigned int pos, unsigned int ret, unsigned int ln);
 void set_main_asm(asmtab * at, unsigned int ln);
 
 void execute(asmtab * at, unsigned int* data, unsigned int max);

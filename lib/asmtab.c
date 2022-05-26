@@ -53,7 +53,7 @@ int add_asm(asmtab * at, enum op op, unsigned int op0, unsigned int op1, unsigne
 }
 
 int reduce_cop(asmtab * at) {
-   if (at->end->ins.op == COP && 
+   if (at->end->ins.op == COP &&
          (at->end->previous->ins.op == AFC ||
           at->end->previous->ins.op == ADD ||
           at->end->previous->ins.op == SOU ||
@@ -101,57 +101,59 @@ int jump_nop(asmtab *at, unsigned int ln) {
    return ret;
 }
 
-int jump_cnd(asmtab *at) {
-   asmcell** add = malloc(sizeof(asmcell*));
-   int ret = remove_op(at, CND, add);
-   if (ret >= 0 && (*add)->next != NULL) {
-      asmcell* tmp = *add;
-      at->end->ins.op0 = ret;
-      while (tmp != at->end) {
-         tmp = tmp->next;
-         switch (tmp->ins.op) {
+int jump_if(asmtab *at, unsigned int pos, unsigned int ln) {
+   asmcell* tmp = at->end;
+   while (tmp != NULL && tmp->line != pos) {
+      tmp = tmp->previous;
+   }
+   if (tmp != NULL && tmp->ins.op == JMF) {
+      tmp->ins.op1 = ln;
+      return tmp->line;
+   }
+   return -1;
+}
+
+int jump_while(asmtab *at, unsigned int ret, unsigned int pos, unsigned int ln) {
+   asmcell * tmp = at->end;
+   if (tmp != NULL && tmp->ins.op == JMP) {
+      tmp->ins.op0 = ret;
+      while (tmp != NULL && tmp->line != pos) {
+         tmp = tmp->previous;
+      }
+      if (tmp != NULL && tmp->ins.op == JMF) {
+         tmp->ins.op1 = ln;
+         return tmp->line;
+      }
+   }
+   return -1;
+}
+
+void set_main_asm(asmtab *at, unsigned int ln) {
+   if (at->size > 0) {
+      inst ins = {JMP,ln+1,0,0};
+      asmcell* beg = malloc(sizeof(asmcell));
+      beg->line = 0;
+      beg->previous = NULL;
+      beg->ins = ins;
+      beg->next = at->begin;
+      at->begin = beg;
+      at->size++;
+      while (beg != NULL && beg->next != NULL) {
+         beg = beg->next;
+         switch (beg->ins.op) {
             case JMP:
-               tmp->ins.op0--;
+               beg->ins.op0++;
                break;
             case CLL:
+               beg->ins.op2++;
             case JMF:
-               tmp->ins.op1--;
+               beg->ins.op1++;
                break;
             default:
                break;
          }
-         tmp->line--;
+         beg->line++;
       }
-      free(*add);
-   }
-   free(add);
-   return ret;
-}
-
-void set_main_asm(asmtab *at, unsigned int ln) {
-   inst in = {JMP,ln+1,0,0};
-   asmcell* beg = malloc(sizeof(asmcell));
-   beg->line = 0;
-   beg->previous = NULL;
-   beg->ins = in;
-   beg->next = at->begin;
-   at->begin = beg;
-   at->size++;
-   while (beg->next != NULL) {
-      beg = beg->next;
-      switch (beg->ins.op) {
-         case JMP:
-            beg->ins.op0++;
-            break;
-         case CLL:
-            beg->ins.op2++;
-         case JMF:
-            beg->ins.op1++;
-            break;
-         default:
-            break;
-      }
-      beg->line++;
    }
 }
 
