@@ -1,22 +1,36 @@
 %{
 #include <stdlib.h>
 #include <stdio.h>
+
+#include "type.h"
+#include "function.h"
 #include "asmtab.h"
+#include "condtab.h"
+#include "funtab.h"
 #include "symtab.h"
 
 int yylex();
 void yyerror(const char *s);
 
-unsigned short depth = 0; // Profondeur courante du programme
-unsigned short offset = 0; // Décalage courant des variables temporaires
-int addr_tmp = 0; // Adresse temporaire utilisée
+unsigned int depth = 0; // Profondeur courante du programme
+unsigned int offset = 0; // Décalage des variables temporaires
+unsigned int fun_offset = 0; // Décalage des arguments de fonction
+unsigned int ret_add = 0; // Adresse de retour de function
+unsigned int addr_tmp = 0; // Adresse temporaire utilisée
+unsigned int arg_count = 0; // Adresse du prochain argument d'une fonction
+
+function* fun; // Création de fonction
+function* call;// Appel de fonction
+
 symtab * st; // Tableau de symboles
+condtab * ct; // Pile de structure de contrôle
+funtab * ft; // Tableau de fonctions
 asmtab * at; // Tableau d'instructions
 
 // Fonction de choix de l'adresse temporaire de retour
-unsigned short tmp_add(unsigned short left, unsigned short right) {
-   unsigned short left_tmp = is_tmp(st,left);
-   unsigned short right_tmp = is_tmp(st,right);
+unsigned int tmp_add(unsigned int left, unsigned int right) {
+   unsigned int left_tmp = is_tmp(st,left);
+   unsigned int right_tmp = is_tmp(st,right);
    if (left_tmp) {
       if (right_tmp && offset >= 1) {
          offset--;
@@ -30,11 +44,11 @@ unsigned short tmp_add(unsigned short left, unsigned short right) {
 
 %}
 %union {int num; char* string; enum type type; enum op op;}
-%token tMAIN tAO tAF tINT tVOID tIF tWHILE tCONST tEGAL tSOU tADD tMUL tDIV tPO tPF tPV tFL tPRINT tDEG tDIF tSUP tINF tSUE tINE tAND tOR tVIR
+%token tAO tAF tINT tVOID tIF tWHILE tCONST tEGAL tSOU tADD tMUL tDIV tPO tPF tPV tFL tPRINT tDEG tDIF tSUP tINF tSUE tINE tAND tOR tVIR tRET
 %token <num> tNB
-%token <string> tID
+%token <string> tID tMAIN
 %type <num> Valeur Cond Conds
-%type <type> Type
+%type <type> Type MType
 %type <op> Sym
 %right tEGAL
 %left tADD tSOU
@@ -42,60 +56,275 @@ unsigned short tmp_add(unsigned short left, unsigned short right) {
 %start Prg
 %%
 Prg  : Func Prg
-     | Main;
-Main : tMAIN tPO tPF Body 
-     | tINT tMAIN tPO tPF Body ; /* Main */
-Func : Type tID tPO Args tPF Body { printf("fin fonction"); };  /* Function */
-Arg  : Type tID ;
-Args : Arg tVIR Args 
-     | ;
+     | Main { YYACCEPT; }
+     /* Forme d'un programme */;
+Main : MType tMAIN { 
+         // Indication du début de programme en ASM
+         set_main_asm(at,get_last_line(at)); 
+         // Ajout de la fonction main à la liste des fonctions 
+         set_main_fun(ft,get_last_line(at),$1);
+     }
+     tPO tPF Body 
+     /* Fonction pricipale */;
+MType: Type     
+     | { $$ = INT; }
+     /* Type possible pour la fonction principale */;
+Func : Type tID { 
+         // Définition de la nouvelle fonction
+         fun = init_fun($2,get_last_line(at),$1); 
+     } tPO DArgList tPF { 
+         // Ajout à la liste des fonctions
+         add_fun(ft,fun); 
+     } Body { 
+         // Ajout de l'instruction de retour
+         add_asm(at,RET,0,0,0); 
+         offset=0;
+         //TODO reduce return 
+     }
+      /* Fonction avec arguments */;
+DArgList : | DArgs;
+DArgs: DArg tVIR DArgs
+     | DArg
+     /* Déclaration d'arguments */;
+DArg : Type tID {
+         // Ajout d'un argument à la liste
+         add_arg(fun,$2,$1);
+         add_sym(st,$1,$2,1);
+     } /* Argument déclaré */;
 Type : tINT { $$ = INT; }
-     | tVOID { $$ = VOID; };
-Body : tAO { depth++; } Insts tAF { remove_depth(st,depth); depth--; }; /* Corps de fonction/structure de contrôle */
+     | tVOID { $$ = VOID; }
+     /* Type de variables/arguments/fonctions */;
+Body : tAO {
+         // Augmentation de la profondeur
+         depth++; 
+     } Insts tAF {
+         // Diminution de la profondeur et suppression des anciennes variables
+         remove_depth(st,depth); 
+         depth--;
+     } /* Corps de fonction/structure de contrôle */;
 Insts: Inst Insts
-     | ;
-Inst : Decl
-     | Aff
-     | Print
-     | Ctrl ;
-Decl: Type tID tPV { add_sym(st,$1,$2,depth); } /* Déclaration sans affectation */
-    | Type tID tEGAL Valeur tPV { add_sym(st,$1,$2,depth); offset=0; } /* Déclaration avec affectation */
-    | tCONST Type tID tEGAL Valeur tPV /*{ valeur dans le code }*/; /* Déclaration de constante */
-Aff: tID tEGAL Valeur tPV { add_asm(at,COP,get_address(st,$1),$3,0); reduce_cop(at); offset=0; } /* Attribution */
-   | tID tMUL tEGAL Valeur tPV { addr_tmp = get_address(st,$1); add_asm(at,MUL,addr_tmp,addr_tmp,$4); offset=0; } /* Multiplication */
-   | tID tDIV tEGAL Valeur tPV { addr_tmp = get_address(st,$1); add_asm(at,DIV,addr_tmp,addr_tmp,$4); offset=0; } /* Division */
-   | tID tADD tEGAL Valeur tPV { addr_tmp = get_address(st,$1); add_asm(at,ADD,addr_tmp,addr_tmp,$4); offset=0; } /* Addition */
-   | tID tSOU tEGAL Valeur tPV { addr_tmp = get_address(st,$1); add_asm(at,SOU,addr_tmp,addr_tmp,$4); offset=0; } /* Soustraction */;
-Valeur: tNB { addr_tmp = get_tmp(st,offset++); add_asm(at,AFC,addr_tmp,$1,0); $$ = addr_tmp; } /* Nombre */
-      | tID { $$ = get_address(st,$1); } /* Variable */
+     | /* Séquence d'instructions */;
+Inst : Decl tPV
+     | Aff tPV
+     | Call tPV
+     | Return tPV
+     | Print tPV
+     | Ctrl 
+     /* Types d'instruction */;
+Decl: Type tID { 
+         add_sym(st,$1,$2,depth); 
+    } /* Déclaration sans affectation */
+    | Type tID tEGAL Valeur { 
+         add_sym(st,$1,$2,depth);
+         offset=0;
+    } /* Déclaration avec affectation */
+    | tCONST Type tID tEGAL Valeur /*{ valeur dans le code }*/
+    /* Déclaration de constante */;
+Aff: tID tEGAL Valeur { 
+      add_asm(at,COP,get_sym_address(st,$1),$3,0);
+      reduce_cop(at);
+      offset=0;
+   } /* Attribution */
+   | tID tMUL tEGAL Valeur { 
+      addr_tmp = get_sym_address(st,$1); 
+      add_asm(at,MUL,addr_tmp,addr_tmp,$4); 
+      offset=0; 
+   } /* Multiplication */
+   | tID tDIV tEGAL Valeur { 
+      addr_tmp = get_sym_address(st,$1); 
+      add_asm(at,DIV,addr_tmp,addr_tmp,$4); 
+      offset=0; 
+   } /* Division */
+   | tID tADD tEGAL Valeur { 
+      addr_tmp = get_sym_address(st,$1); 
+      add_asm(at,ADD,addr_tmp,addr_tmp,$4); 
+      offset=0; 
+   } /* Addition */
+   | tID tSOU tEGAL Valeur { 
+      addr_tmp = get_sym_address(st,$1); 
+      add_asm(at,SOU,addr_tmp,addr_tmp,$4); 
+      offset=0; 
+   } /* Soustraction */;
+Valeur: tNB { 
+         addr_tmp = get_tmp(st,offset++); 
+         add_asm(at,AFC,addr_tmp,$1,0); 
+         $$ = addr_tmp; 
+      } /* Nombre */
+      | tID { 
+         $$ = get_sym_address(st,$1);
+      } /* Variable */
+      | Call { 
+         if (call->t == VOID)
+            yyerror("CANNOT GET VALUE FROM VOID FUNCTION");
+         addr_tmp = get_tmp(st,offset++);
+         add_asm(at,COP,addr_tmp,get_tmp(st,offset+1),0);
+         $$ = addr_tmp;
+      } /* Retour de fonction */
       | tPO Valeur tPF { $$ = $2; } /* Parenthèses */
-      | Valeur tMUL Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,MUL,addr_tmp,$1,$3); $$ = addr_tmp; } /* Multiplication */
-      | Valeur tDIV Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,DIV,addr_tmp,$1,$3); $$ = addr_tmp; } /* Division */
-      | Valeur tADD Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,ADD,addr_tmp,$1,$3); $$ = addr_tmp; } /* Addition */
-      | Valeur tSOU Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,SOU,addr_tmp,$1,$3); $$ = addr_tmp; }; /* Soustraction */
-Print : tPRINT tPO Valeur tPF tPV { add_asm(at,PRI,$3,0,0); offset=0; };
-Ctrl  : tIF tPO Conds tPF { add_asm(at,JMF,$3,0,0); add_asm(at,NOP,0,0,0); offset=0;} Body { jump_nop(at,get_last_line(at)); }
-      | tWHILE tPO { add_asm(at,CND,0,0,0); } Conds tPF { add_asm(at,JMF,$4,0,0); add_asm(at,NOP,0,0,0); offset=0; } Body { add_asm(at,JMP,0,0,0); jump_nop(at,get_last_line(at)); jump_cnd(at); };
-Conds : Conds Sym Conds { addr_tmp = tmp_add($1,$3); add_asm(at,$2,addr_tmp,$1,$3); $$ = addr_tmp; }
+      | Valeur tMUL Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,MUL,addr_tmp,$1,$3); 
+         $$ = addr_tmp; 
+      } /* Multiplication */
+      | Valeur tDIV Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,DIV,addr_tmp,$1,$3); 
+         $$ = addr_tmp; 
+      } /* Division */
+      | Valeur tADD Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,ADD,addr_tmp,$1,$3); 
+         $$ = addr_tmp; 
+      } /* Addition */
+      | Valeur tSOU Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,SOU,addr_tmp,$1,$3); 
+         $$ = addr_tmp; 
+      } /* Soustraction */;
+Call  : tID tPO { 
+         // Initialisation du décalage des paramètres
+         fun_offset=offset; 
+      } Args tPF {
+         // Récupération de la fonction
+         ret_add = get_fun(ft,$1,call);
+         if (ret_add < 0) 
+            yyerror("UNDEFINED FUNCTION");
+         if (arg_count != call->argc)
+            yyerror("WRONG NUMBER OF ARGUMENTS");
+         // Instruction d'appel de fonction (décalage base, adresse de retour et saut)
+         add_asm(at,CLL,get_tmp(st,offset),get_last_line(at)+1,call->add);
+         arg_count=0;
+         fun_offset=0;
+      } /* Appel de fonction avec arguments */
+      | tID tPO tPF {
+         // Récupération de la fonction
+         ret_add = get_fun(ft,$1,call);
+         if (ret_add < 0) 
+            yyerror("UNDEFINED FUNCTION");
+         if (call->argc != 0)
+            yyerror("WRONG NUMBER OF ARGUMENTS");
+         // Instruction d'appel de fonction (décalage base, adresse de retour et saut)
+         add_asm(at,CLL,get_tmp(st,offset),get_last_line(at)+1,call->add);
+      } /* Appel de fonction sans arguments */;
+Args  : Arg tVIR Args
+      | Arg
+      /* Liste d'arguments */;
+Arg   : Valeur {
+         // Ajustement de l'offset si la valeur est temporaire
+         if (is_tmp(st,$1)) {
+            offset--;
+         }
+         // Ajout de l'argument de fonction dans la mémoire temporaire
+         add_asm(at,COP,get_tmp(st,fun_offset+2),$1,0);
+         //TODO reduce_cop
+         arg_count++;
+         fun_offset++;
+      } /* Valeur en argument */;
+Return: tRET Valeur {
+         if (fun->t == VOID)
+            yyerror("RETURN WITH VALUE IN VOID FUNCTION");
+         add_asm(at,COP,0,$2,0);
+         reduce_cop(at);
+         add_asm(at,RET,0,0,0);
+      } /* Valeur en retour de fonction */
+      | tRET {
+         // Retour de fonction (décalage base et saut vers l'adresse de retour)
+         if (fun->t != VOID) 
+            yyerror("RETURN WITHOUT VALUE IN NON-VOID FUNCTION");
+         add_asm(at,RET,0,0,0);
+      } /* Retour de fonction sans valeur */;
+Print : tPRINT tPO Valeur tPF {
+         add_asm(at,PRI,$3,0,0);
+         offset=0;
+      } /* Instruction d'affichage */;
+Ctrl  : tIF tPO Conds tPF {
+         // Saut conditionel hors du corps du IF
+         push_cond(ct,get_last_line(at));
+         add_asm(at,JMF,$3,0,0);
+         offset=0;
+      } Body {
+         // Définition de la ligne de saut
+         jump_if(at,pop_cond(ct),get_last_line(at));
+      }
+      //TODO else
+      | tWHILE tPO {
+         // Début de la suite de conditions du WHILE
+         push_cond(ct,get_last_line(at));
+      } Conds tPF {
+         // Saut conditionel hors du corps du WHILE
+         push_cond(ct,get_last_line(at));
+         add_asm(at,JMF,$4,0,0); 
+         offset=0;
+      } Body {
+         // Saut au début des conditions
+         add_asm(at,JMP,0,0,0);
+         // Définition de la ligne de saut de sortie et de la ligne de retour aux conditions
+         jump_while(at,pop_cond(ct),pop_cond(ct),get_last_line(at));
+      }
+      /* Structures de contrôle */;
+Conds : Conds Sym Conds {
+         // Assosiation logique entre deux conditions
+         addr_tmp = tmp_add($1,$3);
+         add_asm(at,$2,addr_tmp,$1,$3);
+         $$ = addr_tmp; 
+      }
       | tPO Conds tPF { $$ = $2; }
-      | Cond { $$ = $1; };
+      | Cond { $$ = $1; }
+      /* Séquence de conditions */;
 Sym   : tAND { $$ = AND; }
-      | tOR { $$ = OR; };
+      | tOR { $$ = OR; }
+      /* Association de symboles */;
 Cond  : Valeur { $$ = $1; }
-      | Valeur tDEG Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,EQU,addr_tmp,$1,$3); $$ = addr_tmp; }
-      | Valeur tDIF Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,EQU,addr_tmp,$1,$3); add_asm(at,NOT,addr_tmp,addr_tmp,0); $$ = addr_tmp; }
-      | Valeur tSUP Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,SUP,addr_tmp,$1,$3); $$ = addr_tmp; }
-      | Valeur tSUE Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,INF,addr_tmp,$1,$3); add_asm(at,NOT,addr_tmp,addr_tmp,0); $$ = addr_tmp; }
-      | Valeur tINF Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,INF,addr_tmp,$1,$3); $$ = addr_tmp; }
-      | Valeur tINE Valeur { addr_tmp = tmp_add($1,$3); add_asm(at,SUP,addr_tmp,$1,$3); add_asm(at,NOT,addr_tmp,addr_tmp,0); $$ = addr_tmp; };
+      | Valeur tDEG Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,EQU,addr_tmp,$1,$3); 
+         $$ = addr_tmp; 
+      } /* Égale à */
+      | Valeur tDIF Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,EQU,addr_tmp,$1,$3); 
+         add_asm(at,NOT,addr_tmp,addr_tmp,0); 
+         $$ = addr_tmp; 
+      } /* Différent de */
+      | Valeur tSUP Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,SUP,addr_tmp,$1,$3); 
+         $$ = addr_tmp; 
+      } /* Supérieur à */
+      | Valeur tSUE Valeur {
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,INF,addr_tmp,$1,$3); 
+         add_asm(at,NOT,addr_tmp,addr_tmp,0); 
+         $$ = addr_tmp; 
+      } /* Supérieur ou égale à */
+      | Valeur tINF Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,INF,addr_tmp,$1,$3); 
+         $$ = addr_tmp; 
+      } /* Inférieur à */
+      | Valeur tINE Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,SUP,addr_tmp,$1,$3); 
+         add_asm(at,NOT,addr_tmp,addr_tmp,0); 
+         $$ = addr_tmp; 
+      } /* Inférieur ou égale à */;
 %%
-void yyerror(const char *s) { fprintf(stderr, "%s\n", s); exit(1); }
+
+// Gestion des erreurs
+void yyerror(const char *s) { 
+   fprintf(stderr, "%s\n", s); 
+   exit(1); 
+}
+
+// Fonction principale de compilation
 int main(int argc, char** argv) {
    st = init_st();
+   ct = init_ct();
+   ft = init_ft();
    at = init_at();
+   call = malloc(sizeof(function));
    yyparse();
    FILE* out = fopen("./out","w");
    export_asm(at,out);
-   printf("YES\n");
    return 0;
 }

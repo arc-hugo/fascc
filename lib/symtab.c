@@ -9,33 +9,33 @@ symtab * init_st() {
    return st;
 }
 
-int height(symtab * st) {
+int height_st(symtab * st) {
    return st->height;
 }
 
-int push(symtab * st, variable var) {
-   cell * temp = malloc(sizeof(cell));
+int push_st(symtab * st, variable var) {
+   symcell * temp = malloc(sizeof(symcell));
    temp->var = var;
    temp->next = st->begin;
    st->begin = temp;
    return st->height++;
 }
 
-int pop(symtab * st, cell * c) {
-   if (height(st) == 0) {
+int pop_st(symtab * st, symcell * c) {
+   if (height_st(st) == 0) {
       return -1;
    }
    c->next = st->begin->next;
    c->var = st->begin->var;
-   cell * tmp = st->begin->next;
+   symcell * tmp = st->begin->next;
    free(st->begin);
    st->begin = tmp;
    st->height--;
    return 0;
 }
 
-int get_address(symtab * st, char* name) {
-   cell * temp = st->begin;
+int get_sym_address(symtab * st, char* name) {
+   symcell * temp = st->begin;
    while (temp != NULL && strcmp(temp->var.name,name) != 0) {
       temp = temp->next;
    }
@@ -47,29 +47,29 @@ int get_address(symtab * st, char* name) {
 }
 
 int add_sym(symtab * st, enum type t, char* name, unsigned short depth) {
-   if (get_address(st, name) == -1) {
-      variable var = {strdup(name), height(st), t, depth};
-      return push(st, var);
+   if (get_sym_address(st, name) == -1) {
+      variable var = {strdup(name), height_st(st), t, depth};
+      return push_st(st, var);
    }
    return -1;
 }
 
 unsigned short get_tmp(symtab * st, unsigned short offset) {
-   return height(st)+offset;
+   return height_st(st)+offset;
 }
 
 unsigned short is_tmp(symtab * st, unsigned short add) {
-   return height(st) <= add;
+   return height_st(st) <= add;
 }
 
 int remove_depth(symtab * st, unsigned short depth) {
-   cell * temp = malloc(sizeof(cell));
-   unsigned short ret = pop(st, temp);
+   symcell * temp = malloc(sizeof(symcell));
+   unsigned short ret = pop_st(st, temp);
    while (ret == 0 && temp->var.depth >= depth) {
-      ret = pop(st, temp);
+      ret = pop_st(st, temp);
    }
    if (ret == 0) {
-      push(st, temp->var);
+      push_st(st, temp->var);
    }
    free(temp);
    return 0;

@@ -1,10 +1,7 @@
 #ifndef SYMTAB_H__
 #define SYMTAB_H__
 
-enum type {
-   INT,
-   VOID
-};
+#include "type.h"
 
 typedef struct {
    char* name;
@@ -13,21 +10,22 @@ typedef struct {
    unsigned short depth;
 } variable;
 
-struct cell;
-typedef struct cell {
+struct symcell;
+typedef struct symcell {
    variable var;
-   struct cell* next;
-} cell;
+   struct symcell* next;
+} symcell;
 
 typedef struct {
    unsigned int height;
-   cell* begin;
+   symcell* begin;
 } symtab;
 
 symtab * init_st();
+int height_st(symtab * st);
 
 int add_sym(symtab * st, enum type t, char* name, unsigned short depth);
-int get_address(symtab * st, char* name);
+int get_sym_address(symtab * st, char* name);
 int remove_depth(symtab * st, unsigned short depth);
 unsigned short is_tmp(symtab * st, unsigned short add);
 unsigned short get_tmp(symtab * st, unsigned short offset);

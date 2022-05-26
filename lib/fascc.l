@@ -24,7 +24,10 @@
                                           yylval.num = strtold(yytext,NULL);
                                           return tNB;
                                         }
-"main"                                 { return tMAIN; }
+"main"                                  {
+                                          yylval.string = "main";
+                                          return tMAIN;
+                                        }
 "{"                                     { return tAO; }
 "}"                                     { return tAF; }
 "int"                                   { return tINT; }
@@ -48,6 +51,7 @@
 "&&"                                    { return tAND; }
 "||"                                    { return tOR; }
 "print"		                        { return tPRINT; }
+"return"                                { return tRET; }
 ";"           	                        { return tPV; }
 ","                                  { return tVIR; }
 "/*"([^*]|\*+[^*/])*\*+"/"              {}

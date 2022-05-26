@@ -53,9 +53,14 @@ int add_asm(asmtab * at, enum op op, unsigned int op0, unsigned int op1, unsigne
 }
 
 int reduce_cop(asmtab * at) {
-   if (at->end->ins.op == COP && 
-         at->end->previous->ins.op == AFC &&
-         at->end->previous->ins.op0 == at->end->ins.op1) {
+   if (at->end->ins.op == COP &&
+         (at->end->previous->ins.op == AFC ||
+          at->end->previous->ins.op == ADD ||
+          at->end->previous->ins.op == SOU ||
+          at->end->previous->ins.op == MUL ||
+          at->end->previous->ins.op == DIV) &&
+         at->end->previous->ins.op0 == at->end->ins.op1
+      ) {
       at->end->previous->ins.op0 = at->end->ins.op0;
       asmcell * tmp = at->end;
       at->end = at->end->previous;
@@ -75,10 +80,18 @@ int jump_nop(asmtab *at, unsigned int ln) {
       tmp->previous->ins.op1 = ln-1;
       while (ret >= 0 && tmp != NULL && tmp != at->end) {
          tmp = tmp->next;
-         if (tmp->ins.op == JMF) {
-            tmp->ins.op1--;
-         } else if (tmp->ins.op == JMP && tmp->ins.op0 > ret) {
-            tmp->ins.op0--;
+         switch (tmp->ins.op) {
+            case JMP:
+               if (tmp->ins.op0 > ret) {
+                  tmp->ins.op0--;
+               }
+               break;
+            case CLL:
+            case JMF:
+               tmp->ins.op1--;
+               break;
+            default:
+               break;
          }
          tmp->line--;
       }
@@ -88,25 +101,60 @@ int jump_nop(asmtab *at, unsigned int ln) {
    return ret;
 }
 
-int jump_cnd(asmtab *at) {
-   asmcell** add = malloc(sizeof(asmcell*));
-   int ret = remove_op(at, CND, add);
-   if (ret >= 0 && (*add)->next != NULL) {
-      asmcell* tmp = *add;
-      at->end->ins.op0 = ret;
-      while (tmp != at->end) {
-         tmp = tmp->next;
-         if (tmp->ins.op == JMP && tmp->ins.op0 > ret) {
-            tmp->ins.op0--;
-         } else if (tmp->ins.op == JMF) {
-            tmp->ins.op1--;
-         }
-         tmp->line--;
-      }
-      free(*add);
+int jump_if(asmtab *at, unsigned int pos, unsigned int ln) {
+   asmcell* tmp = at->end;
+   while (tmp != NULL && tmp->line != pos) {
+      tmp = tmp->previous;
    }
-   free(add);
-   return ret;
+   if (tmp != NULL && tmp->ins.op == JMF) {
+      tmp->ins.op1 = ln;
+      return tmp->line;
+   }
+   return -1;
+}
+
+int jump_while(asmtab *at, unsigned int ret, unsigned int pos, unsigned int ln) {
+   asmcell * tmp = at->end;
+   if (tmp != NULL && tmp->ins.op == JMP) {
+      tmp->ins.op0 = ret;
+      while (tmp != NULL && tmp->line != pos) {
+         tmp = tmp->previous;
+      }
+      if (tmp != NULL && tmp->ins.op == JMF) {
+         tmp->ins.op1 = ln;
+         return tmp->line;
+      }
+   }
+   return -1;
+}
+
+void set_main_asm(asmtab *at, unsigned int ln) {
+   if (at->size > 0) {
+      inst ins = {JMP,ln+1,0,0};
+      asmcell* beg = malloc(sizeof(asmcell));
+      beg->line = 0;
+      beg->previous = NULL;
+      beg->ins = ins;
+      beg->next = at->begin;
+      at->begin = beg;
+      at->size++;
+      while (beg != NULL && beg->next != NULL) {
+         beg = beg->next;
+         switch (beg->ins.op) {
+            case JMP:
+               beg->ins.op0++;
+               break;
+            case CLL:
+               beg->ins.op2++;
+            case JMF:
+               beg->ins.op1++;
+               break;
+            default:
+               break;
+         }
+         beg->line++;
+      }
+   }
 }
 
 asmcell* jump(asmcell * c, unsigned int pc, unsigned int add) {
@@ -125,93 +173,128 @@ void execute(asmtab * at, unsigned int* data, unsigned int max) {
    asmcell * pp = at->begin;
    unsigned int pc = 0;
    unsigned int add = 0;
+   unsigned int bp = 0;
    while (pp != NULL) {
+      printf("%d: ",pc);
       switch (pp->ins.op) {
          case ADD:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) + *(data+pp->ins.op2);
+            printf("@%d <- @%d (%d) + @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) + *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case MUL:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) * *(data+pp->ins.op2);
+            printf("@%d <- @%d (%d) * @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) * *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case SOU:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) - *(data+pp->ins.op2);
+            printf("@%d <- @%d (%d) - @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) - *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case DIV:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) / *(data+pp->ins.op2);
+            printf("@%d <- @%d (%d) / @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) / *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case COP:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1);
+            printf("@%d <- @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp);
             pp = pp->next;
             pc++;
             break;
          case AFC:
-            *(data+pp->ins.op0) = pp->ins.op1;
+            printf("@%d <- %d",pp->ins.op0+bp,pp->ins.op1);
+            *(data+pp->ins.op0+bp) = pp->ins.op1;
             pp = pp->next;
             pc++;
             break;
          case JMP:
+            printf("jump to l%d",pp->ins.op0+bp);
             add = pp->ins.op0;
             pp = jump(pp, pc, add);
             pc = add;
             break;
          case JMF:
-            if (*(data+pp->ins.op0) == 0) {
+            if (*(data+pp->ins.op0+bp) == 0) {
+               printf("false, jump to l%d",pp->ins.op1+bp);
                add = pp->ins.op1;
                pp = jump(pp, pc, add);
                pc = add;
             } else {
+               printf("no jump to l%d",pp->ins.op1+bp);
                pp = pp->next;
                pc++;
             }
             break;
          case INF:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) < *(data+pp->ins.op2);
+            printf("@%d <- @%d (%d) < @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) < *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case SUP:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) > *(data+pp->ins.op2);
+            printf("@%d <- @%d (%d) > @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) > *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case EQU:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) == *(data+pp->ins.op2);
+            printf("@%d <- @%d (%d) == @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) == *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case PRI:
-            printf("%d\n",*(data+pp->ins.op0));
+            printf("printing @%d -> %d",pp->ins.op0+bp,*(data+pp->ins.op0+bp));
             pp = pp->next;
             pc++;
             break;
          case AND:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) && *(data+pp->ins.op2);
+            printf("@%d <- @%d (%d) && @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) && *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case OR:
-            *(data+pp->ins.op0) = *(data+pp->ins.op1) || *(data+pp->ins.op2);
+            printf("@%d <- @%d (%d) || @%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp),pp->ins.op2+bp,*(data+pp->ins.op2+bp));
+            *(data+pp->ins.op0+bp) = *(data+pp->ins.op1+bp) || *(data+pp->ins.op2+bp);
             pp = pp->next;
             pc++;
             break;
          case NOT:
-            *(data+pp->ins.op0) = !(*(data+pp->ins.op1));
+            printf("@%d <- !@%d (%d)",pp->ins.op0+bp,pp->ins.op1+bp,*(data+pp->ins.op1+bp));
+            *(data+pp->ins.op0+bp) = !(*(data+pp->ins.op1+bp));
             pp = pp->next;
             pc++;
+            break;
+         case CLL:
+            *(data+pp->ins.op0+bp) = pp->ins.op0+2;
+            *(data+pp->ins.op0+bp+1) = pp->ins.op1;
+            bp += pp->ins.op0+2;
+            add = pp->ins.op2;
+            printf("call fun at l%d, new bp %d",add,bp);
+            pp = jump(pp, pc, add);
+            pc = add;
+            break;
+         case RET:
+            bp -= 2;
+            add = *(data+bp+1);
+            pp = jump(pp, pc, add);
+            pc = add;
+            bp -= *(data+bp)-2;
+            printf("return to l%d, new bp %d",add,bp);
             break;
          default:
             pp = pp->next;
             pc++;
             break;
       }
+      printf("\n");
    }
 }
 
@@ -263,6 +346,12 @@ void export_asm(asmtab * at, FILE* out) {
             break;
          case NOT:
             fprintf(out,"NOT @%d @%d\n",tmp->ins.op0,tmp->ins.op1);
+            break;
+         case CLL:
+            fprintf(out,"CLL %d @%d @%d\n",tmp->ins.op0,tmp->ins.op1, tmp->ins.op2);
+            break;
+         case RET:
+            fprintf(out,"RET\n");
             break;
          default:
             break;

@@ -25,6 +25,8 @@
 "AND"   { return tAND; }
 "OR"    { return tOR;  }
 "NOT"   { return tNOT; }
+"CLL"   { return tCLL; }
+"RET"   { return tRET; }
 
 [0-9]+    {
             yylval.num = atoi(yytext);
