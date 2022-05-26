@@ -6,6 +6,5 @@ void f(int a) {
 }
 
 int main() {
-   int a = 0;
-   f(a);
+   f(0+3);
 }
