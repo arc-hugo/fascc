@@ -14,9 +14,9 @@ int height_ft(funtab * ft) {
    return ft->height;
 }
 
-int push_ft(funtab * ft, function fun) {
+int push_ft(funtab * ft, function *fun) {
    funcell * temp = malloc(sizeof(funcell));
-   temp->fun = fun;
+   temp->fun = *fun;
    temp->next = ft->begin;
    ft->begin = temp;
    return ft->height++;
@@ -53,7 +53,7 @@ int is_fun_present(funtab *ft, char* name) {
 
 int add_fun(funtab *ft, function *fun) {
    if (!is_fun_present(ft,fun->name)) {
-      return push_ft(ft, *fun);
+      return push_ft(ft, fun);
    }
    return -1;
 }
@@ -66,7 +66,7 @@ int set_main_fun(funtab *ft, unsigned int ln, enum type t) {
          temp = temp->next;
       }
       function *fun = init_fun("main", ln, t);
-      return push_ft(ft, *fun);
+      return push_ft(ft, fun);
    }
    return -1;
 }

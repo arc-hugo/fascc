@@ -221,7 +221,7 @@ void execute(asmtab * at, unsigned int* data, unsigned int max) {
             break;
          case JMF:
             if (*(data+pp->ins.op0+bp) == 0) {
-               printf("jump to l%d because of false",pp->ins.op1+bp);
+               printf("false, jump to l%d",pp->ins.op1+bp);
                add = pp->ins.op1;
                pp = jump(pp, pc, add);
                pc = add;
