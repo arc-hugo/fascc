@@ -22,6 +22,7 @@ typedef struct {
 } symtab;
 
 symtab * init_st();
+int height_st(symtab * st);
 
 int add_sym(symtab * st, enum type t, char* name, unsigned short depth);
 int get_sym_address(symtab * st, char* name);

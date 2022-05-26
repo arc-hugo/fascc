@@ -22,19 +22,6 @@ int push_ft(funtab * ft, function fun) {
    return ft->height++;
 }
 
-/*int pop_ft(funtab * ft, funcell * c) {
-   if (height_ft(ft) == 0) {
-      return -1;
-   }
-   c->next = ft->begin->next;
-   c->fun = ft->begin->fun;
-   funcell * tmp = ft->begin->next;
-   free(ft->begin);
-   ft->begin = tmp;
-   ft->height--;
-   return 0;
-}*/
-
 int get_fun(funtab *ft, char *name, function* fun) {
    funcell * temp = ft->begin;
    while (temp != NULL && strcmp(temp->fun.name, name) != 0) {
@@ -71,10 +58,15 @@ int add_fun(funtab *ft, function *fun) {
    return -1;
 }
 
-void set_main_fun(funtab *ft) {
-   funcell* temp = ft->begin;
-   while (temp != NULL) {
-      temp->fun.add++;
-      temp = temp->next;
+int set_main_fun(funtab *ft, unsigned int ln, enum type t) {
+   if (!is_fun_present(ft, "main")) {
+      funcell * temp = ft->begin;
+      while (temp != NULL) {
+         temp->fun.add++;
+         temp = temp->next;
+      }
+      function *fun = init_fun("main", ln, t);
+      return push_ft(ft, *fun);
    }
+   return -1;
 }
