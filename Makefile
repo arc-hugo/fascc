@@ -1,4 +1,4 @@
-LIB=lib
+LIB=src
 COMP=fascc
 INTER=fastinterp
 

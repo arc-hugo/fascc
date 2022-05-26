@@ -14,7 +14,7 @@ asmtab * at;
 %}
 %union {int num;}
 %token tADD tMUL tSOU tDIV tCOP tAFC tJMP tJMF tINF tSUP tEQU tPRI tAND tOR tNOT tCLL tRET
-%token <num> tNB tADDR
+%token <num> tNB tADDR tLINE
 %start Insts
 %%
 Insts : Inst Insts
@@ -25,8 +25,8 @@ Inst  : tADD tADDR tADDR tADDR { add_asm(at,ADD,$2,$3,$4); }
       | tDIV tADDR tADDR tADDR { add_asm(at,DIV,$2,$3,$4); }
       | tCOP tADDR tADDR { add_asm(at,COP,$2,$3,0); }
       | tAFC tADDR tNB { add_asm(at,AFC,$2,$3,0); }
-      | tJMP tNB { add_asm(at,JMP,$2,0,0); }
-      | tJMF tADDR tNB { add_asm(at,JMF,$2,$3,0); }
+      | tJMP tLINE { add_asm(at,JMP,$2,0,0); }
+      | tJMF tADDR tLINE { add_asm(at,JMF,$2,$3,0); }
       | tINF tADDR tADDR tADDR { add_asm(at,INF,$2,$3,$4); }
       | tSUP tADDR tADDR tADDR { add_asm(at,SUP,$2,$3,$4); }
       | tEQU tADDR tADDR tADDR { add_asm(at,EQU,$2,$3,$4); }
@@ -34,7 +34,7 @@ Inst  : tADD tADDR tADDR tADDR { add_asm(at,ADD,$2,$3,$4); }
       | tAND tADDR tADDR tADDR { add_asm(at,AND,$2,$3,$4); }
       | tOR tADDR tADDR tADDR { add_asm(at,OR,$2,$3,$4); }
       | tNOT tADDR tADDR { add_asm(at,NOT,$2,$3,0); }
-      | tCLL tNB tADDR tADDR { add_asm(at,CLL,$2,$3,$4); }
+      | tCLL tNB tLINE tLINE { add_asm(at,CLL,$2,$3,$4); }
       | tRET { add_asm(at,RET,0,0,0); }
 %%
 void yyerror(const char *s) { fprintf(stderr, "%s\n", s); exit(1); }

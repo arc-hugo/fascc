@@ -317,14 +317,14 @@ void export_asm(asmtab * at, FILE* out) {
          case COP:
             fprintf(out,"COP @%d @%d\n",tmp->ins.op0,tmp->ins.op1);
             break;
-         case AFC:
+            case AFC:
             fprintf(out,"AFC @%d %d\n",tmp->ins.op0,tmp->ins.op1);
             break;
          case JMP:
-            fprintf(out,"JMP %d\n",tmp->ins.op0);
+            fprintf(out,"JMP l%d\n",tmp->ins.op0);
             break;
          case JMF:
-            fprintf(out,"JMF @%d %d\n",tmp->ins.op0,tmp->ins.op1);
+            fprintf(out,"JMF @%d l%d\n",tmp->ins.op0,tmp->ins.op1);
             break;
          case INF:
             fprintf(out,"INF @%d @%d @%d\n",tmp->ins.op0,tmp->ins.op1,tmp->ins.op2);
@@ -348,7 +348,7 @@ void export_asm(asmtab * at, FILE* out) {
             fprintf(out,"NOT @%d @%d\n",tmp->ins.op0,tmp->ins.op1);
             break;
          case CLL:
-            fprintf(out,"CLL %d @%d @%d\n",tmp->ins.op0,tmp->ins.op1, tmp->ins.op2);
+            fprintf(out,"CLL %d l%d l%d\n",tmp->ins.op0,tmp->ins.op1, tmp->ins.op2);
             break;
          case RET:
             fprintf(out,"RET\n");

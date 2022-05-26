@@ -36,3 +36,7 @@
             yylval.num = atoi(yytext+1);
             return tADDR;
           }
+"l"[0-9]+ {
+            yylval.num = atoi(yytext+1);
+            return tLINE;
+          }
