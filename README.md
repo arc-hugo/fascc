@@ -8,7 +8,7 @@ FASCC permet de compiler un code C minimal en code assembleur pour une future ar
 - [x] Création d'un interpréteur du code ASM.
 - [x] Implémentation des expressions conditionnelles (if et while).
 - [ ] Implémentation de pointeurs
-- [ ] Implémentation de fonctions
+- [x] Implémentation de fonctions
 - [ ] Traitement des erreurs
 - [ ] Optimisation du code ASM
 
