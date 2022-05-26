@@ -10,7 +10,7 @@ CFLAGS=-Wall -g
 YFALGS=-Wcounterexamples -d -v
 
 OBJCOM=$(BUILDDIR)/asmtab.o
-OBJCOMP=$(BUILDDIR)/symtab.o $(BUILDDIR)/function.o $(BUILDDIR)/funtab.o $(BUILDDIR)/fascc.tab.o $(BUILDDIR)/fascc.yy.o
+OBJCOMP=$(BUILDDIR)/symtab.o $(BUILDDIR)/condtab.o $(BUILDDIR)/function.o $(BUILDDIR)/funtab.o $(BUILDDIR)/fascc.tab.o $(BUILDDIR)/fascc.yy.o
 OBJINTER=$(BUILDDIR)/fastinterp.tab.o $(BUILDDIR)/fastinterp.yy.o
 
 all: $(COMP) $(INTER)

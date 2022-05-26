@@ -52,12 +52,14 @@ Mkfile.old
 dkms.conf
 
 # Lex/Yacc output
-fascc
-fastinterp
 *.output
 *.yy.c
 *.tab.c
 *.tab.h
+
+# Project specific
+fascc
+fastinterp
 .vscode/settings.json
 build/
 out
