@@ -50,17 +50,22 @@ unsigned int tmp_add(unsigned int left, unsigned int right) {
 %}
 %union {int num; char* string; enum type type; enum op op;}
 
-%token tAO tAF tINT tVOID tIF tELSE tWHILE tCONST tEGAL tSOU tADD tMUL tDIV tPO tPF tPV tFL tPRINT tDEG tDIF tSUP tINF tSUE tINE tAND tOR tVIR tRET
+%token tAO tAF tINT tVOID tIF tELSE tWHILE tCONST tPV tFL tPRINT tVIR tRET
 %token <num> tNB
 %token <string> tID tMAIN
 
-%type <num> Valeur Cond Conds
+%type <num> Valeur
 %type <type> Type MType
-%type <op> Sym
+//%type <op> Sym SymN
 
 %right tEGAL
+%left tOR
+%left tAND
+%left tDEG tDIF
+%left tINF tINE tSUE tSUP
 %left tADD tSOU
 %left tMUL tDIV
+%left tPO tPF
 
 %nonassoc tTHEN
 %nonassoc tELSE
@@ -177,22 +182,66 @@ Valeur: tNB {
          addr_tmp = tmp_add($1,$3); 
          add_asm(at,MUL,addr_tmp,$1,$3); 
          $$ = addr_tmp; 
-      } /* Multiplication */
+      }
       | Valeur tDIV Valeur { 
          addr_tmp = tmp_add($1,$3); 
          add_asm(at,DIV,addr_tmp,$1,$3); 
          $$ = addr_tmp; 
-      } /* Division */
+      }
       | Valeur tADD Valeur { 
          addr_tmp = tmp_add($1,$3); 
          add_asm(at,ADD,addr_tmp,$1,$3); 
          $$ = addr_tmp; 
-      } /* Addition */
+      }
       | Valeur tSOU Valeur { 
          addr_tmp = tmp_add($1,$3); 
          add_asm(at,SOU,addr_tmp,$1,$3); 
          $$ = addr_tmp; 
-      } /* Soustraction */;
+      }
+      | Valeur tDEG Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,EQU,addr_tmp,$1,$3); 
+         $$ = addr_tmp; 
+      }
+      | Valeur tDIF Valeur {
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,EQU,addr_tmp,$1,$3); 
+         add_asm(at,NOT,addr_tmp,addr_tmp,0); 
+         $$ = addr_tmp;  
+      }
+      | Valeur tSUP Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,SUP,addr_tmp,$1,$3); 
+         $$ = addr_tmp; 
+      }
+      | Valeur tSUE Valeur {
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,INF,addr_tmp,$1,$3); 
+         add_asm(at,NOT,addr_tmp,addr_tmp,0); 
+         $$ = addr_tmp;  
+      }
+      | Valeur tINF Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,INF,addr_tmp,$1,$3); 
+         $$ = addr_tmp; 
+      }
+      | Valeur tINE Valeur {
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,SUP,addr_tmp,$1,$3); 
+         add_asm(at,NOT,addr_tmp,addr_tmp,0); 
+         $$ = addr_tmp;  
+      }
+      | Valeur tAND Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,AND,addr_tmp,$1,$3); 
+         $$ = addr_tmp; 
+      }
+      | Valeur tOR Valeur { 
+         addr_tmp = tmp_add($1,$3); 
+         add_asm(at,OR,addr_tmp,$1,$3); 
+         $$ = addr_tmp; 
+      }
+      ;
 Call  : tID tPO { 
          // Initialisation du décalage des paramètres
          fun_offset=offset; 
@@ -249,7 +298,7 @@ Print : tPRINT tPO Valeur tPF {
          add_asm(at,PRI,$3,0,0);
          offset=0;
       } /* Instruction d'affichage */;
-Ctrl  : tIF tPO Conds tPF {
+Ctrl  : tIF tPO Valeur tPF {
          // Saut conditionel hors du corps du IF
          push_cond(ct,get_last_line(at));
          add_asm(at,JMF,$3,0,0);
@@ -258,7 +307,7 @@ Ctrl  : tIF tPO Conds tPF {
       | tWHILE tPO {
          // Début de la suite de conditions du WHILE
          push_cond(ct,get_last_line(at));
-      } Conds tPF {
+      } Valeur tPF {
          // Saut conditionel hors du corps du WHILE
          push_cond(ct,get_last_line(at));
          add_asm(at,JMF,$4,0,0); 
@@ -284,52 +333,6 @@ IfN   : %prec tTHEN {
          // Définition de la ligne de saut
          jump_else(at,pop_cond(ct),get_last_line(at)); 
       };
-Conds : Conds Sym Conds {
-         // Assosiation logique entre deux conditions
-         addr_tmp = tmp_add($1,$3);
-         add_asm(at,$2,addr_tmp,$1,$3);
-         $$ = addr_tmp; 
-      }
-      | tPO Conds tPF { $$ = $2; }
-      | Cond { $$ = $1; }
-      /* Séquence de conditions */;
-Sym   : tAND { $$ = AND; }
-      | tOR { $$ = OR; }
-      /* Association de symboles */;
-Cond  : Valeur { $$ = $1; }
-      | Valeur tDEG Valeur { 
-         addr_tmp = tmp_add($1,$3); 
-         add_asm(at,EQU,addr_tmp,$1,$3); 
-         $$ = addr_tmp; 
-      } /* Égale à */
-      | Valeur tDIF Valeur { 
-         addr_tmp = tmp_add($1,$3); 
-         add_asm(at,EQU,addr_tmp,$1,$3); 
-         add_asm(at,NOT,addr_tmp,addr_tmp,0); 
-         $$ = addr_tmp; 
-      } /* Différent de */
-      | Valeur tSUP Valeur { 
-         addr_tmp = tmp_add($1,$3); 
-         add_asm(at,SUP,addr_tmp,$1,$3); 
-         $$ = addr_tmp; 
-      } /* Supérieur à */
-      | Valeur tSUE Valeur {
-         addr_tmp = tmp_add($1,$3); 
-         add_asm(at,INF,addr_tmp,$1,$3); 
-         add_asm(at,NOT,addr_tmp,addr_tmp,0); 
-         $$ = addr_tmp; 
-      } /* Supérieur ou égale à */
-      | Valeur tINF Valeur { 
-         addr_tmp = tmp_add($1,$3); 
-         add_asm(at,INF,addr_tmp,$1,$3); 
-         $$ = addr_tmp; 
-      } /* Inférieur à */
-      | Valeur tINE Valeur { 
-         addr_tmp = tmp_add($1,$3); 
-         add_asm(at,SUP,addr_tmp,$1,$3); 
-         add_asm(at,NOT,addr_tmp,addr_tmp,0); 
-         $$ = addr_tmp; 
-      } /* Inférieur ou égale à */;
 %%
 
 // Gestion des erreurs
