@@ -8,6 +8,9 @@
 #include "condtab.h"
 #include "funtab.h"
 #include "symtab.h"
+#include "export.h"
+
+int extern yylineno;
 
 int yylex();
 void yyerror(const char *s);
@@ -18,6 +21,8 @@ unsigned int fun_offset = 0; // Décalage des arguments de fonction
 unsigned int ret_add = 0; // Adresse de retour de function
 unsigned int addr_tmp = 0; // Adresse temporaire utilisée
 unsigned int arg_count = 0; // Adresse du prochain argument d'une fonction
+
+unsigned short erreur = 0; // Détection d'une erreur
 
 function* fun; // Création de fonction
 function* call;// Appel de fonction
@@ -312,8 +317,8 @@ Cond  : Valeur { $$ = $1; }
 
 // Gestion des erreurs
 void yyerror(const char *s) { 
-   fprintf(stderr, "%s\n", s); 
-   exit(1); 
+   fprintf(stderr, "line %d: %s\n", yylineno, s);
+   erreur = 1;
 }
 
 // Fonction principale de compilation
@@ -324,7 +329,10 @@ int main(int argc, char** argv) {
    at = init_at();
    call = malloc(sizeof(function));
    yyparse();
-   FILE* out = fopen("./out","w");
-   export_asm(at,out);
-   return 0;
+   if (!erreur) {
+      FILE* out = fopen("./out","w");
+      export_asm(at,out);
+      return 0;
+   }
+   return 1;
 }

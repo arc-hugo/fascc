@@ -1,6 +1,5 @@
 #ifndef ASMTAB_H__
 #define ASMTAB_H__
-#include <stdio.h>
 
 enum op {
    NOP = 0, // Instruction vide
@@ -54,8 +53,5 @@ int reduce_cop(asmtab * at);
 int jump_if(asmtab * at, unsigned int pos, unsigned int ln);
 int jump_while(asmtab * at, unsigned int pos, unsigned int ret, unsigned int ln);
 void set_main_asm(asmtab * at, unsigned int ln);
-
-void execute(asmtab * at, unsigned int* data, unsigned int max);
-void export_asm(asmtab * at, FILE* out);
 
 #endif

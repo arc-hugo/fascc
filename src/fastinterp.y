@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "asmtab.h"
+#include "execute.h"
 
 #define MAX_DATA 4096
 
@@ -42,6 +43,5 @@ int main(int argc, char** argv) {
    at = init_at();
    yyparse();
    execute(at,data,MAX_DATA);
-   printf("END\n");
    return 0;
 }

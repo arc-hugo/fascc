@@ -10,15 +10,18 @@ CFLAGS=-Wall -g
 YFALGS=-Wcounterexamples -d -v
 
 OBJCOM=$(BUILDDIR)/asmtab.o
-OBJCOMP=$(BUILDDIR)/symtab.o $(BUILDDIR)/condtab.o $(BUILDDIR)/function.o $(BUILDDIR)/funtab.o $(BUILDDIR)/fascc.tab.o $(BUILDDIR)/fascc.yy.o
-OBJINTER=$(BUILDDIR)/fastinterp.tab.o $(BUILDDIR)/fastinterp.yy.o
+OBJCOMP=$(BUILDDIR)/symtab.o $(BUILDDIR)/condtab.o $(BUILDDIR)/function.o $(BUILDDIR)/funtab.o $(BUILDDIR)/export.o $(BUILDDIR)/fascc.tab.o $(BUILDDIR)/fascc.yy.o
+OBJINTER=$(BUILDDIR)/execute.o $(BUILDDIR)/fastinterp.tab.o $(BUILDDIR)/fastinterp.yy.o
 
 all: $(COMP) $(INTER)
 
-$(BUILDDIR)/%.o: $(SRC)/%.c
+$(BUILDDIR):
 	if [[ ! -d ./$(BUILDDIR) ]]; then\
 		mkdir $(BUILDDIR);\
 	fi
+
+$(BUILDDIR)/%.o: $(SRC)/%.c
+	@mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(SRC)/%.tab.c: $(SRC)/%.y
