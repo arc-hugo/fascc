@@ -49,15 +49,22 @@ unsigned int tmp_add(unsigned int left, unsigned int right) {
 
 %}
 %union {int num; char* string; enum type type; enum op op;}
-%token tAO tAF tINT tVOID tIF tWHILE tCONST tEGAL tSOU tADD tMUL tDIV tPO tPF tPV tFL tPRINT tDEG tDIF tSUP tINF tSUE tINE tAND tOR tVIR tRET
+
+%token tAO tAF tINT tVOID tIF tELSE tWHILE tCONST tEGAL tSOU tADD tMUL tDIV tPO tPF tPV tFL tPRINT tDEG tDIF tSUP tINF tSUE tINE tAND tOR tVIR tRET
 %token <num> tNB
 %token <string> tID tMAIN
+
 %type <num> Valeur Cond Conds
 %type <type> Type MType
 %type <op> Sym
+
 %right tEGAL
 %left tADD tSOU
 %left tMUL tDIV
+
+%nonassoc tTHEN
+%nonassoc tELSE
+
 %start Prg
 %%
 Prg  : Func Prg
@@ -247,11 +254,7 @@ Ctrl  : tIF tPO Conds tPF {
          push_cond(ct,get_last_line(at));
          add_asm(at,JMF,$3,0,0);
          offset=0;
-      } Body {
-         // Définition de la ligne de saut
-         jump_if(at,pop_cond(ct),get_last_line(at));
-      }
-      //TODO else
+      } Body IfN
       | tWHILE tPO {
          // Début de la suite de conditions du WHILE
          push_cond(ct,get_last_line(at));
@@ -267,6 +270,20 @@ Ctrl  : tIF tPO Conds tPF {
          jump_while(at,pop_cond(ct),pop_cond(ct),get_last_line(at));
       }
       /* Structures de contrôle */;
+IfN   : %prec tTHEN {
+         // Définition de la ligne de saut
+         jump_if(at,pop_cond(ct),get_last_line(at));
+      }
+      | tELSE {
+         // Définition de la ligne de saut
+         jump_if(at,pop_cond(ct),get_last_line(at)+1);
+         // Saut hors du corps du ELSE
+         push_cond(ct,get_last_line(at));
+         add_asm(at,JMP,0,0,0);
+      } Body {
+         // Définition de la ligne de saut
+         jump_else(at,pop_cond(ct),get_last_line(at)); 
+      };
 Conds : Conds Sym Conds {
          // Assosiation logique entre deux conditions
          addr_tmp = tmp_add($1,$3);

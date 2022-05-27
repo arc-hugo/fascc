@@ -51,6 +51,7 @@ int add_asm(asmtab * at, enum op op, unsigned int op0, unsigned int op1, unsigne
 int reduce_cop(asmtab * at);
 
 int jump_if(asmtab * at, unsigned int pos, unsigned int ln);
+int jump_else(asmtab * at, unsigned int pos, unsigned int ln);
 int jump_while(asmtab * at, unsigned int pos, unsigned int ret, unsigned int ln);
 void set_main_asm(asmtab * at, unsigned int ln);
 

@@ -34,6 +34,7 @@
 "void" 		                        { return tVOID; }
 "const"                                 { return tCONST; }
 "if" 		                        { return tIF; }
+"else"                                  { return tELSE; }
 "while" 	                        { return tWHILE; }
 "="	                                { return tEGAL; }
 "-"	                                { return tSOU; }

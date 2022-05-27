@@ -84,6 +84,18 @@ int jump_if(asmtab *at, unsigned int pos, unsigned int ln) {
    return -1;
 }
 
+int jump_else(asmtab *at, unsigned int pos, unsigned int ln) {
+   asmcell* tmp = at->end;
+   while (tmp != NULL && tmp->line != pos) {
+      tmp = tmp->previous;
+   }
+   if (tmp != NULL && tmp->ins.op == JMP) {
+      tmp->ins.op0 = ln;
+      return tmp->line;
+   }
+   return -1;
+}
+
 int jump_while(asmtab *at, unsigned int ret, unsigned int pos, unsigned int ln) {
    asmcell * tmp = at->end;
    if (tmp != NULL && tmp->ins.op == JMP) {
