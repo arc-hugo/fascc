@@ -1,8 +1,11 @@
+SHELL=/bin/bash
+
 SRC=src
 COMP=fascc
 INTER=fastinterp
 
 TESTDIR=test
+TESTFILES=$(shell find $(TESTDIR) -name '*.c')
 BUILDDIR=build
 
 CC=gcc
@@ -40,9 +43,9 @@ clean:
 	rm $(COMP) $(INTER) $(OBJCOM) $(OBJCOMP) $(OBJINTER) $(SRC)/{*.tab.h,*.output}
 
 test: all
-	for f in $(shell find $(TESTDIR) -name '*.c'); do\
+	for f in $(TESTFILES); do\
 		echo "-------------------------------$$f--------------------------------";\
-		cat $$f | ./$(COMP);\
+		./$(COMP) $$f;\
 		printf "\nCODE C:\n\n"; nl $$f;\
 		printf "\nCODE ASM:\n\n"; nl -v 0 out;\
 		printf "\nINTERPRETATION:\n\n"; cat out | ./$(INTER); echo; \
