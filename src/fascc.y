@@ -1,6 +1,8 @@
 %{
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "type.h"
 #include "function.h"
@@ -10,7 +12,10 @@
 #include "symtab.h"
 #include "export.h"
 
-int extern yylineno;
+// Ligne courante
+extern int yylineno;
+// Fichier à parser
+extern FILE* yyin;
 
 int yylex();
 void yyerror(const char *s);
@@ -151,35 +156,35 @@ Decl : Type tID {
 Aff: tID tEGAL Valeur {
       add_asm(at,COP,get_sym_address(st,$1,&cst),$3,0);
       if (cst == 1)
-         yyerror("cannot assign value to const");
+         yyerror("impossible d'assigner une valeur à la constante");
       reduce_cop(at);
       offset=0;
    } /* Attribution */
    | tID tMUL tEGAL Valeur { 
       addr_tmp = get_sym_address(st,$1,&cst); 
       if (cst == 1)
-         yyerror("cannot assign value to const");
+         yyerror("impossible d'assigner une valeur à la constante");
       add_asm(at,MUL,addr_tmp,addr_tmp,$4); 
       offset=0; 
    } /* Multiplication */
    | tID tDIV tEGAL Valeur { 
       addr_tmp = get_sym_address(st,$1,&cst); 
       if (cst == 1)
-         yyerror("cannot assign value to const");
+         yyerror("impossible d'assigner une valeur à la constante");
       add_asm(at,DIV,addr_tmp,addr_tmp,$4); 
       offset=0; 
    } /* Division */
    | tID tADD tEGAL Valeur { 
       addr_tmp = get_sym_address(st,$1,&cst); 
       if (cst == 1)
-         yyerror("cannot assign value to const");
+         yyerror("impossible d'assigner une valeur à la constante");
       add_asm(at,ADD,addr_tmp,addr_tmp,$4); 
       offset=0; 
    } /* Addition */
    | tID tSOU tEGAL Valeur {
       addr_tmp = get_sym_address(st,$1,&cst); 
       if (cst == 1)
-         yyerror("cannot assign value to const");
+         yyerror("impossible d'assigner une valeur à la constante");
       add_asm(at,SOU,addr_tmp,addr_tmp,$4); 
       offset=0; 
    } /* Soustraction */;
@@ -193,7 +198,7 @@ Valeur: tNB {
       } /* Variable */
       | Call { 
          if (call->t == VOID)
-            yyerror("CANNOT GET VALUE FROM VOID FUNCTION");
+            yyerror("valeur void n'a pas pû être ignorée");
          addr_tmp = get_tmp(st,offset++);
          add_asm(at,COP,addr_tmp,get_tmp(st,offset+1),0);
          $$ = addr_tmp;
@@ -270,9 +275,9 @@ Call  : tID tPO {
          // Récupération de la fonction
          ret_add = get_fun(ft,$1,call);
          if (ret_add < 0)
-            yyerror("UNDEFINED FUNCTION");
+            yyerror("fonction indéfinie");
          if (arg_count != call->argc)
-            yyerror("WRONG NUMBER OF ARGUMENTS");
+            yyerror("nombre d'arguments invalide");
          // Instruction d'appel de fonction (décalage base, adresse de retour et saut)
          add_asm(at,CLL,get_tmp(st,offset),get_last_line(at)+1,call->add);
          arg_count=0;
@@ -282,9 +287,9 @@ Call  : tID tPO {
          // Récupération de la fonction
          ret_add = get_fun(ft,$1,call);
          if (ret_add < 0) 
-            yyerror("UNDEFINED FUNCTION");
+            yyerror("fonction indéfinie");
          if (call->argc != 0)
-            yyerror("WRONG NUMBER OF ARGUMENTS");
+            yyerror("nombre d'arguments invalide");
          // Instruction d'appel de fonction (décalage base, adresse de retour et saut)
          add_asm(at,CLL,get_tmp(st,offset),get_last_line(at)+1,call->add);
       } /* Appel de fonction sans arguments */;
@@ -304,7 +309,7 @@ Arg   : Valeur {
       } /* Valeur en argument */;
 Return: tRET Valeur {
          if (fun->t == VOID)
-            yyerror("RETURN WITH VALUE IN VOID FUNCTION");
+            yyerror("retour de valeur impossible dans une fonction void");
          add_asm(at,COP,0,$2,0);
          reduce_cop(at);
          add_asm(at,RET,0,0,0);
@@ -312,7 +317,7 @@ Return: tRET Valeur {
       | tRET {
          // Retour de fonction (décalage base et saut vers l'adresse de retour)
          if (fun->t != VOID) 
-            yyerror("RETURN WITHOUT VALUE IN NON-VOID FUNCTION");
+            yyerror("retour sans valeur impossible dans une fonction non-void");
          add_asm(at,RET,0,0,0);
       } /* Retour de fonction sans valeur */;
 Print : tPRINT tPO Valeur tPF {
@@ -361,18 +366,53 @@ void yyerror(const char *s) {
    fprintf(stderr, "\e[1m%d:\e[m %s\n", yylineno, s);
    erreur = 1;
 }
+
 // Fonction principale de compilation
 int main(int argc, char** argv) {
-   st = init_st();
-   ct = init_ct();
-   ft = init_ft();
-   at = init_at();
-   call = malloc(sizeof(function));
-   yyparse();
-   if (!erreur) {
-      FILE* out = fopen("./out","w");
-      export_asm(at,out);
-      return 0;
+   // Fichier de sorti personnalisé
+   char* ov = "out";
+   // Variables de getopt
+   int c;
+   opterr = 0;
+
+   // Parcours des arguments optionnels
+   while((c = getopt(argc,argv,"o:")) != -1) {
+      switch(c) {
+         case 'o':
+            ov = strdup(optarg);
+            break;
+         default:
+            break;
+      }
    }
+   
+   // Spécification du fichier à compiler
+   if (optind < argc) {
+      yyin = fopen(argv[optind], "r");
+      // Ouverture du fichier à compiler
+      if (yyin) {
+         st = init_st();
+         ct = init_ct();
+         ft = init_ft();
+         at = init_at();
+         call = malloc(sizeof(function));
+         yyparse();
+         // Pas d'erreur lors de la compilation
+         if (!erreur) {
+            FILE* out = fopen(ov,"w");
+            // Ouverture du ficher de sortie
+            if (out) {
+               export_asm(at,out);
+               return 0;
+            } 
+            fprintf(stderr,"Erreur lors de l'écriture du fichier %s\n",ov);
+            return 4;
+         }
+         return 3;
+      }
+      fprintf(stderr,"Impossible d'ouvrir le fichier %s\n",argv[optind]);
+      return 2;
+   }
+   fprintf(stderr,"Veuillez spécifier un fichier C à compiler\n");
    return 1;
 }
