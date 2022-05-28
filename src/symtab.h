@@ -8,6 +8,7 @@ typedef struct {
    unsigned int add;
    enum type t;
    unsigned short depth;
+   unsigned short cst;
 } variable;
 
 struct symcell;
@@ -25,9 +26,13 @@ symtab * init_st();
 int height_st(symtab * st);
 
 int add_sym(symtab * st, enum type t, char* name, unsigned short depth);
-int get_sym_address(symtab * st, char* name);
-int remove_depth(symtab * st, unsigned short depth);
-unsigned short is_tmp(symtab * st, unsigned short add);
+int add_cst(symtab *st, enum type t, char *name, unsigned short depth);
+
+int get_sym_address(symtab * st, char* name, unsigned short * cst);
 unsigned short get_tmp(symtab * st, unsigned short offset);
+
+int remove_depth(symtab * st, unsigned short depth);
+
+unsigned short is_tmp(symtab * st, unsigned short add);
 
 #endif

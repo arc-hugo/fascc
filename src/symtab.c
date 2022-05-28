@@ -34,7 +34,20 @@ int pop_st(symtab * st, symcell * c) {
    return 0;
 }
 
-int get_sym_address(symtab * st, char* name) {
+int get_sym_address(symtab * st, char* name, unsigned short * cst) {
+   symcell * temp = st->begin;
+   while (temp != NULL && strcmp(temp->var.name,name) != 0) {
+      temp = temp->next;
+   }
+   if (temp == NULL) {
+      return -1;
+   } else {
+      *cst = temp->var.cst;
+      return temp->var.add;
+   }
+}
+
+int is_present(symtab * st, char* name) {
    symcell * temp = st->begin;
    while (temp != NULL && strcmp(temp->var.name,name) != 0) {
       temp = temp->next;
@@ -47,8 +60,16 @@ int get_sym_address(symtab * st, char* name) {
 }
 
 int add_sym(symtab * st, enum type t, char* name, unsigned short depth) {
-   if (get_sym_address(st, name) == -1) {
-      variable var = {strdup(name), height_st(st), t, depth};
+   if (is_present(st, name) == -1) {
+      variable var = {strdup(name), height_st(st), t, depth, 0};
+      return push_st(st, var);
+   }
+   return -1;
+}
+
+int add_cst(symtab * st, enum type t, char* name, unsigned short depth) {
+   if (is_present(st, name) == -1) {
+      variable var = {strdup(name), height_st(st), t, depth, 1};
       return push_st(st, var);
    }
    return -1;

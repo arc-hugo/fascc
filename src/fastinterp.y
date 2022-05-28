@@ -10,6 +10,7 @@ int yylex();
 void yyerror(const char *s);
 
 unsigned int data[MAX_DATA];
+unsigned short erreur = 0;
 asmtab * at;
 
 %}
@@ -37,11 +38,21 @@ Inst  : tADD tADDR tADDR tADDR { add_asm(at,ADD,$2,$3,$4); }
       | tNOT tADDR tADDR { add_asm(at,NOT,$2,$3,0); }
       | tCLL tNB tLINE tLINE { add_asm(at,CLL,$2,$3,$4); }
       | tRET { add_asm(at,RET,0,0,0); }
+      | error '\n' { yyerror(""); }
+      ;
 %%
-void yyerror(const char *s) { fprintf(stderr, "%s\n", s); exit(1); }
+
+void yyerror(const char *s) { 
+   fprintf(stderr, "%s\n", s);
+   erreur = 1;
+}
+
 int main(int argc, char** argv) {
    at = init_at();
    yyparse();
-   execute(at,data,MAX_DATA);
-   return 0;
+   if (!erreur) {
+      execute(at,data,MAX_DATA);
+      return 0;
+   }
+   return 1;
 }

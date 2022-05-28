@@ -6,10 +6,13 @@
 %}
 
 %option noyywrap
+%option noinput
+%option nounput
 
 %%
 
-[ \t\n]+  {}
+[ \t]+  {}
+[\n]    { yylineno++; }
 "ADD"   { return tADD; }
 "MUL"   { return tMUL; }
 "SOU"   { return tSOU; }

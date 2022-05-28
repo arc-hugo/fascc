@@ -21,8 +21,8 @@ unsigned int fun_offset = 0; // Décalage des arguments de fonction
 unsigned int ret_add = 0; // Adresse de retour de function
 unsigned int addr_tmp = 0; // Adresse temporaire utilisée
 unsigned int arg_count = 0; // Adresse du prochain argument d'une fonction
-
 unsigned short erreur = 0; // Détection d'une erreur
+unsigned short cst = 0; // Valeur constante
 
 function* fun; // Création de fonction
 function* call;// Appel de fonction
@@ -48,6 +48,10 @@ unsigned int tmp_add(unsigned int left, unsigned int right) {
 }
 
 %}
+
+%define parse.error verbose
+%define parse.lac full
+
 %union {int num; char* string; enum type type; enum op op;}
 
 %token tAO tAF tINT tVOID tIF tELSE tWHILE tCONST tPV tFL tPRINT tVIR tRET
@@ -56,7 +60,6 @@ unsigned int tmp_add(unsigned int left, unsigned int right) {
 
 %type <num> Valeur
 %type <type> Type MType
-//%type <op> Sym SymN
 
 %right tEGAL
 %left tOR
@@ -127,38 +130,56 @@ Inst : Decl tPV
      | Return tPV
      | Print tPV
      | Ctrl 
+     | error tPV 
+     | error tAF 
      /* Types d'instruction */;
-Decl: Type tID { 
+Decl : Type tID { 
          add_sym(st,$1,$2,depth); 
-    } /* Déclaration sans affectation */
-    | Type tID tEGAL Valeur { 
+     } /* Déclaration sans affectation */
+     | Type tID tEGAL Valeur { 
          add_sym(st,$1,$2,depth);
          offset=0;
-    } /* Déclaration avec affectation */
-    | tCONST Type tID tEGAL Valeur /*{ valeur dans le code }*/
-    /* Déclaration de constante */;
-Aff: tID tEGAL Valeur { 
-      add_asm(at,COP,get_sym_address(st,$1),$3,0);
+     } /* Déclaration avec affectation */
+     | tCONST Type tID {
+         add_cst(st,$2,$3,depth);
+     } /* Constante sans affectation */
+     | tCONST Type tID tEGAL Valeur {
+         add_cst(st,$2,$3,depth);
+         offset=0;   
+     } /* Constante avec affectation */
+     ;
+Aff: tID tEGAL Valeur {
+      add_asm(at,COP,get_sym_address(st,$1,&cst),$3,0);
+      if (cst == 1)
+         yyerror("cannot assign value to const");
       reduce_cop(at);
       offset=0;
    } /* Attribution */
    | tID tMUL tEGAL Valeur { 
-      addr_tmp = get_sym_address(st,$1); 
+      addr_tmp = get_sym_address(st,$1,&cst); 
+      if (cst == 1)
+         yyerror("cannot assign value to const");
       add_asm(at,MUL,addr_tmp,addr_tmp,$4); 
       offset=0; 
    } /* Multiplication */
    | tID tDIV tEGAL Valeur { 
-      addr_tmp = get_sym_address(st,$1); 
+      addr_tmp = get_sym_address(st,$1,&cst); 
+      if (cst == 1)
+         yyerror("cannot assign value to const");
       add_asm(at,DIV,addr_tmp,addr_tmp,$4); 
       offset=0; 
    } /* Division */
    | tID tADD tEGAL Valeur { 
-      addr_tmp = get_sym_address(st,$1); 
+      addr_tmp = get_sym_address(st,$1,&cst); 
+      if (cst == 1)
+         yyerror("cannot assign value to const");
       add_asm(at,ADD,addr_tmp,addr_tmp,$4); 
       offset=0; 
    } /* Addition */
-   | tID tSOU tEGAL Valeur { 
-      addr_tmp = get_sym_address(st,$1); 
+   | tID tSOU tEGAL Valeur {
+      addr_tmp = get_sym_address(st,$1,&cst); 
+      if (cst == 1)
+         yyerror("cannot assign value to const");
       add_asm(at,SOU,addr_tmp,addr_tmp,$4); 
       offset=0; 
    } /* Soustraction */;
@@ -168,7 +189,7 @@ Valeur: tNB {
          $$ = addr_tmp; 
       } /* Nombre */
       | tID { 
-         $$ = get_sym_address(st,$1);
+         $$ = get_sym_address(st,$1,&cst);
       } /* Variable */
       | Call { 
          if (call->t == VOID)
@@ -248,7 +269,7 @@ Call  : tID tPO {
       } Args tPF {
          // Récupération de la fonction
          ret_add = get_fun(ft,$1,call);
-         if (ret_add < 0) 
+         if (ret_add < 0)
             yyerror("UNDEFINED FUNCTION");
          if (arg_count != call->argc)
             yyerror("WRONG NUMBER OF ARGUMENTS");
@@ -336,11 +357,10 @@ IfN   : %prec tTHEN {
 %%
 
 // Gestion des erreurs
-void yyerror(const char *s) { 
-   fprintf(stderr, "line %d: %s\n", yylineno, s);
+void yyerror(const char *s) {
+   fprintf(stderr, "\e[1m%d:\e[m %s\n", yylineno, s);
    erreur = 1;
 }
-
 // Fonction principale de compilation
 int main(int argc, char** argv) {
    st = init_st();

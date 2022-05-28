@@ -7,7 +7,7 @@
 #include "fascc.tab.h"
 %}
 
-%option noyywrap
+%option noyywrap noinput nounput yylineno
 
 %%
 
