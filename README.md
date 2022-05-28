@@ -4,7 +4,7 @@ FASCC permet de compiler un code C minimal en code assembleur pour une future ar
 
 ## Fonctionnalités
 - [x] Implémentation des expressions séquentielles classiques (déclaration, affectation, affichage, opérations arithmétiques).
-- [ ] Implémentation des constantes à la compilation.
+- [x] Implémentation des constantes à la compilation.
 - [x] Création d'un interpréteur du code ASM.
 - [x] Implémentation des expressions conditionnelles (if et while).
 - [ ] Implémentation de pointeurs
