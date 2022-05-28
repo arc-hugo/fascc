@@ -5,9 +5,7 @@
 #include "fastinterp.tab.h"
 %}
 
-%option noyywrap
-%option noinput
-%option nounput
+%option noyywrap noinput nounput
 
 %%
 

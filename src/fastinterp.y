@@ -6,6 +6,8 @@
 
 #define MAX_DATA 4096
 
+extern FILE* yyin;
+
 int yylex();
 void yyerror(const char *s);
 
@@ -48,11 +50,19 @@ void yyerror(const char *s) {
 }
 
 int main(int argc, char** argv) {
-   at = init_at();
-   yyparse();
-   if (!erreur) {
-      execute(at,data,MAX_DATA);
-      return 0;
+   if (argc > 1) {
+      yyin = fopen(argv[1],"r");
+      if (yyin) {
+         at = init_at();
+         yyparse();
+         if (!erreur) {
+            execute(at,data,MAX_DATA);
+            return 0;
+         }
+      }
+      fprintf(stderr,"Erreur d'ouverture du fichier %s",argv[0]);
+      return 2;
    }
+   fprintf(stderr,"Fichier assembleur non spécifié");
    return 1;
 }

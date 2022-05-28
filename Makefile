@@ -48,6 +48,6 @@ test: all
 		./$(COMP) $$f;\
 		printf "\nCODE C:\n\n"; nl $$f;\
 		printf "\nCODE ASM:\n\n"; nl -v 0 out;\
-		printf "\nINTERPRETATION:\n\n"; cat out | ./$(INTER); echo; \
+		printf "\nINTERPRETATION:\n\n"; ./$(INTER) out; echo; \
 	done
 	rm out

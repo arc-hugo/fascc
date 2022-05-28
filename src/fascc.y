@@ -388,7 +388,7 @@ int main(int argc, char** argv) {
    
    // Spécification du fichier à compiler
    if (optind < argc) {
-      yyin = fopen(argv[optind], "r");
+      yyin = fopen(argv[optind],"r");
       // Ouverture du fichier à compiler
       if (yyin) {
          st = init_st();
@@ -405,14 +405,14 @@ int main(int argc, char** argv) {
                export_asm(at,out);
                return 0;
             } 
-            fprintf(stderr,"Erreur lors de l'écriture du fichier %s\n",ov);
+            fprintf(stderr,"Erreur d'écriture du fichier %s\n",ov);
             return 4;
          }
          return 3;
       }
-      fprintf(stderr,"Impossible d'ouvrir le fichier %s\n",argv[optind]);
+      fprintf(stderr,"Erreur d'ouverture du fichier %s\n",argv[optind]);
       return 2;
    }
-   fprintf(stderr,"Veuillez spécifier un fichier C à compiler\n");
+   fprintf(stderr,"Fichier à compiler non spécifié\n");
    return 1;
 }
