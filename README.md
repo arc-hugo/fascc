@@ -31,8 +31,8 @@ La compilation d'un fichier C s'effectue ensuite sous la forme :
 ```bash
 $ ./fascc chemin/vers/fichier.c
 ```
-Le fichier de sortie se nom ```out``` par défaut et est placé dans le dossier courant.  
-L'option ```-o chemin/vers/sortie``` peut être utilisée pour appliquer un nouveau nom.
+Le fichier de sortie se nomme ```out``` par défaut et est placé dans le dossier courant.  
+L'option ```-o chemin/vers/sortie``` peut être utilisée pour appliquer un nouveau nom et chemin.
 
 Les fichiers assembleur en sortie peuvent ensuite être interprété avec :
 ```bash
