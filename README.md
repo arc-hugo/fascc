@@ -10,7 +10,7 @@ Le code assembleur en sortie peut ensuite être interprété grâce à l'utilita
 - [x] Implémentation des expressions conditionnelles (if et while).
 - [ ] Implémentation de pointeurs
 - [x] Implémentation de fonctions
-- [ ] Traitement des erreurs
+- [x] Traitement des erreurs
 - [ ] Optimisation du code ASM
 
 ## Prérequis
