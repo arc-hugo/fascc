@@ -10,7 +10,7 @@ BUILDDIR=build
 
 CC=gcc
 CFLAGS=-Wall -g
-YFALGS=-Wcounterexamples -d -v
+YFALGS=-d -v
 
 OBJCOM=$(BUILDDIR)/asmtab.o
 OBJCOMP=$(BUILDDIR)/symtab.o $(BUILDDIR)/condtab.o $(BUILDDIR)/function.o $(BUILDDIR)/funtab.o $(BUILDDIR)/export.o $(BUILDDIR)/fascc.tab.o $(BUILDDIR)/fascc.yy.o
